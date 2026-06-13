@@ -3,648 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A JOURNEY TO YOUR DREAM - 特种兵旅游规划看板</title>
-    <!-- Tailwind CSS CDN -->
+    <title>A TRIP TO YOUR DREAM - 特种兵旅程高精设计器</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- 移动端 HTML5 拖拽事件兼容补丁 -->
     <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.0.8/DragDropTouch.js"></script>
-    <!-- 引入高级手写感圆体/艺术字体 -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Fredoka:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=M+PLUS+Rounded+1c:wght@500;700&family=Fredoka:wght@600&display=swap" rel="stylesheet">
+    
     <style>
-        /* 页面切换动画 */
+        /* 全站强制中文字体应用为高级圆体 */
+        body, input, button, select, textarea {
+            font-family: 'M PLUS Rounded 1c', 'Microsoft YaHei', sans-serif !important;
+            background-color: #fafdfee;
+        }
+
+        /* 统一英文/数字部分转换为柔和粉色手写体 */
+        .handwritten-brand {
+            font-family: 'Caveat', 'Fredoka', cursive !important;
+            color: #ffb7c5 !important; /* 嫩粉色 */
+        }
+        
+        .eng-sub {
+            font-family: 'Fredoka', cursive !important;
+            color: #ffb7c5 !important;
+        }
+
+        /* 页面三阶段渐隐过渡 */
         .fade-enter-active, .fade-leave-active {
-            transition: opacity 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .fade-enter-from, .fade-leave-to {
             opacity: 0;
         }
 
-        /* Vue Transition Group 卡片平滑位移动画 */
-        .card-move,
-        .card-enter-active,
-        .card-leave-active {
+        /* Vue Transition Group 拖拽平滑动画 */
+        .card-move, .card-enter-active, .card-leave-active {
             transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .card-enter-from,
-        .card-leave-to {
+        .card-enter-from, .card-leave-to {
             opacity: 0;
             transform: translateY(12px);
         }
-        .card-leave-active {
-            position: absolute;
-            width: 100%;
-        }
+        .card-leave-active { position: absolute; width: 100%; }
 
-        /* 隐藏滚动条 */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 淡绿色系微调网格背景 */
+        /* Figma 设计：淡绿色系网格纹理背景 */
         .bg-grid-green {
-            background-size: 30px 30px;
-            background-image: linear-gradient(to right, rgba(16, 185, 129, 0.04) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+            background-size: 35px 35px;
+            background-image: linear-gradient(to right, rgba(208, 235, 183, 0.2) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(208, 235, 183, 0.2) 1px, transparent 1px);
         }
-
-        /* 手写圆体艺术字样式 */
-        .handwritten-title {
-            font-family: 'Caveat', 'Fredoka', cursive;
-            color: #ffb7c5; /* 纯正嫩粉色 */
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.03);
+        
+        /* 地图层级防溢出覆写 */
+        .leaflet-container {
+            font-family: 'M PLUS Rounded 1c', sans-serif !important;
         }
     </style>
 </head>
-<body class="bg-[#f4fbf7] text-slate-800 antialiased font-sans selection:bg-emerald-100 overflow-hidden">
+<body class="h-screen w-screen relative text-slate-700 overflow-hidden">
 
-    <div id="app" class="h-screen w-screen relative" v-cloak>
+    <div id="app" class="h-full w-full relative bg-[#F7FDF3]" v-cloak>
         <transition name="fade" mode="out-in">
             
-            <!-- ==================== 1. 开始页面 (Landing Page) ==================== -->
-            <div v-if="currentPage === 'landing'" key="landing" 
-                 class="h-full w-full flex flex-col items-center justify-center relative px-6 bg-grid-green">
+            <div v-if="currentStage === 'landing'" key="landing" class="h-full w-full flex flex-col items-center justify-center relative px-6 bg-grid-green">
                 
-                <!-- 柔和淡绿、粉色背景光晕 -->
-                <div class="absolute w-[450px] h-[450px] bg-gradient-to-tr from-emerald-100/50 to-teal-100/40 blur-3xl rounded-full -top-20 -left-20 pointer-events-none"></div>
-                <div class="absolute w-[450px] h-[450px] bg-gradient-to-bl from-pink-100/40 to-emerald-100/30 blur-3xl rounded-full -bottom-40 -right-20 pointer-events-none"></div>
+                <div class="absolute w-[500px] h-[500px] bg-[#D0EBB7]/40 blur-3xl rounded-full -top-40 -left-20 pointer-events-none"></div>
+                <div class="absolute w-[450px] h-[450px] bg-pink-100/40 blur-3xl rounded-full -bottom-20 -right-20 pointer-events-none"></div>
 
-                <!-- 极简主内容 -->
-                <div class="max-w-2xl text-center space-y-8 z-10">
+                <div class="max-w-2xl text-center space-y-10 animate-fadeIn">
                     <div class="space-y-4">
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full text-xs font-semibold tracking-wide">
-                            🍃 MINTY SYSTEM V4.0
+                        <div class="inline-flex items-center gap-1 px-3 py-0.5 bg-white text-emerald-800 border border-[#D0EBB7] rounded-full text-[10px] font-bold tracking-wider shadow-2xs">
+                            🍃 MINT SYSTEM V4.8
                         </div>
-                        
-                        <!-- 嫩粉色、居中、手写圆体网站标题 -->
-                        <h1 class="text-4xl md:text-6xl font-bold tracking-normal text-center handwritten-title py-2">
-                            A JOURNEY TO YOUR DREAM
+                        <h1 class="text-5xl md:text-7xl font-bold text-center tracking-wide handwritten-brand py-2 drop-shadow-2xs">
+                            A TRIP TO YOUR DREAM
                         </h1>
-                        
-                        <p class="text-xs md:text-sm text-slate-400 max-w-sm mx-auto font-normal leading-relaxed">
-                            在淡绿色的手账画布里，精准拿捏每一公里的通勤，饱和式编排多套 Plan B 备用战术。
-                        </p>
+                        <p class="text-xs text-slate-400 max-w-xs mx-auto tracking-wide">请输入你的出征目的地与核心预算支配</p>
                     </div>
 
-                    <!-- 表单输入区：增加旅游地点与总预算 -->
-                    <div class="p-6 bg-white/90 border border-emerald-100 shadow-xl rounded-2xl max-w-sm mx-auto backdrop-blur-md space-y-4">
+                    <div class="p-6 bg-white/95 border border-[#D0EBB7] shadow-xl rounded-2xl max-w-sm mx-auto space-y-4">
                         <div class="space-y-3 text-left">
                             <div>
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">🌍 目的地探索</label>
-                                <input type="text" v-model="destination" placeholder="你想去哪个城市？(如：北京、上海、成都)" 
-                                       class="w-full bg-slate-50 border border-slate-200 px-3 py-2 mt-1 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:border-emerald-500 transition-colors">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">🌍 设定目的地城市</label>
+                                <input type="text" v-model="destination" placeholder="你想去哪？(如：北京、上海、成都)" class="w-full bg-slate-50 border border-slate-200 px-3 py-2 mt-1 rounded-xl text-xs font-medium focus:outline-none focus:border-[#D0EBB7]">
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-emerald-700/70">💰 本次出行总预算</label>
-                                <input type="number" v-model.number="globalBudget" min="0" step="100"
-                                       class="w-full bg-slate-50 border border-slate-200 px-3 py-2 mt-1 rounded-xl text-xs font-mono font-bold text-emerald-600 focus:outline-none focus:border-emerald-500 transition-colors">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">💰 财务硬核总盘</label>
+                                <input type="number" v-model.number="globalBudget" class="w-full bg-slate-50 border border-slate-200 px-3 py-2 mt-1 rounded-xl text-xs font-mono font-bold text-emerald-700 focus:outline-none focus:border-[#D0EBB7]">
                             </div>
                         </div>
-                        
-                        <button @click="startPlanning" 
-                                class="w-full py-3 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all duration-300 shadow-sm hover:shadow-emerald-100 flex items-center justify-center gap-2 group cursor-pointer">
-                            <span>开启极速路线精算</span>
-                            <span class="group-hover:translate-x-1 transition-transform">🍃</span>
+                        <button @click="currentStage = 'wishlist'" class="w-full py-3 bg-[#D0EBB7] hover:bg-[#c2e2a7] text-emerald-950 rounded-xl text-xs font-bold tracking-wide shadow-xs transition-all cursor-pointer">
+                            配置心愿资产与预算 →
                         </button>
                     </div>
                 </div>
-
-                <div class="absolute bottom-6 text-[10px] font-mono text-emerald-800/40 tracking-widest">MINIMALIST TRAVEL JOURNAL © 2026</div>
             </div>
 
-            <!-- ==================== 2. 工作台策划页面 (Workspace App) ==================== -->
-            <div v-else key="app" class="h-full w-full flex flex-col overflow-hidden bg-[#f4fbf7]">
-                
-                <!-- 顶部扁平化浅色导航栏 -->
-                <header class="bg-white border-b border-emerald-100 px-4 md:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 z-20">
-                    <div class="flex items-center gap-3">
-                        <button @click="currentPage = 'landing'" class="text-slate-300 hover:text-emerald-600 text-xs transition-colors pr-2 border-r border-slate-200">← 修改地点</button>
-                        <div>
-                            <!-- 策划页微型统一艺术标 -->
-                            <h2 class="text-sm tracking-wide font-bold handwritten-title text-left !text-lg">
-                                A JOURNEY TO YOUR DREAM
-                            </h2>
-                            <p class="text-[10px] text-slate-400">正在规划：<span class="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-sm">📍 {{ destination || '未知目的地' }}</span></p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                        <!-- 金额实时统计 -->
-                        <div class="flex items-center gap-2 bg-emerald-50/60 border border-emerald-100 px-3 py-1.5 rounded-xl">
-                            <span class="text-[10px] font-bold text-emerald-800 shrink-0 uppercase tracking-wider">💰 预算总池:</span>
-                            <input type="number" v-model.number="globalBudget" min="0" step="100"
-                                   class="w-16 text-xs font-mono font-bold bg-transparent text-emerald-700 focus:outline-none">
-                            <span class="text-[9px] text-emerald-600">元</span>
-                        </div>
-                        <button @click="addDay" class="px-3 py-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors shrink-0">
-                            + 增配行程天数
-                        </button>
-                    </div>
+            <div v-else-if="currentStage === 'wishlist'" key="wishlist" class="h-full w-full flex flex-col bg-[#F7FDF3]">
+                <header class="bg-white border-b border-[#D0EBB7]/60 px-6 py-3 flex items-center justify-between shadow-2xs">
+                    <button @click="currentStage = 'landing'" class="text-xs text-slate-400 hover:text-emerald-700">← 返回重置</button>
+                    <h1 class="text-3xl font-bold text-center tracking-wide handwritten-brand">A TRIP TO YOUR DREAM</h1>
+                    <div class="text-xs font-bold bg-[#D0EBB7]/30 text-emerald-900 px-3 py-1 rounded-lg border border-[#D0EBB7]/40">📍 城市: {{ destination }}</div>
                 </header>
 
-                <!-- 主体内容划分 -->
-                <div class="flex flex-col md:flex-row flex-1 overflow-hidden relative">
-                    
-                    <!-- 左侧边栏：复合心愿资产池 + 智能城市算法推荐 -->
-                    <aside class="w-full md:w-85 bg-white border-b md:border-b-0 md:border-r border-emerald-100 flex flex-col p-4 shrink-0 max-h-[48vh] md:max-h-none overflow-hidden relative z-10 shadow-xs">
-                        
-                        <!-- 动态智能AI景点卡片推荐面板（根据旅游地点生成） -->
-                        <div class="shrink-0 mb-3 bg-emerald-50/40 p-2.5 rounded-xl border border-emerald-100/70">
-                            <h4 class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-2 flex items-center justify-between">
-                                <span>✨ {{ destination }} 独家高分打卡推荐</span>
-                                <span class="text-[9px] text-emerald-600 font-normal">点击或拖拽直接吸收</span>
-                            </h4>
-                            
-                            <!-- 推荐横向卡片滚动流 -->
-                            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                                <div v-for="rec in currentRecommendations" :key="rec.name"
-                                     draggable="true"
-                                     @dragstart="handleDragStart(rec, { type: 'recommendation' })"
-                                     @click="absorbRecommendation(rec)"
-                                     class="w-36 shrink-0 bg-white border border-emerald-100 p-2 rounded-lg shadow-2xs hover:shadow-xs hover:border-emerald-300 transition-all cursor-pointer text-left relative group">
-                                    <div class="absolute right-1 top-1 text-[9px] text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">➕</div>
-                                    <h5 class="text-[11px] font-semibold text-slate-800 truncate">{{ rec.name }}</h5>
-                                    <div class="mt-1 flex items-center justify-between text-[9px] font-mono text-slate-400">
-                                        <span>⏱️{{ rec.duration }}h</span>
-                                        <span class="text-amber-700">¥{{ rec.cost }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 基础自建表单 -->
-                        <div class="shrink-0 mb-2.5">
-                            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">💡 手动补充心愿卡</h3>
-                            <form @submit.prevent="addSpot" class="space-y-1.5">
-                                <input type="text" v-model="newSpot.name" placeholder="补充小众景点、夜市、私房菜..." required
-                                       class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 transition-colors">
+                <div class="flex-1 overflow-hidden flex flex-col md:flex-row p-4 md:p-6 gap-5 bg-grid-green">
+                    <div class="w-full md:w-85 bg-white p-4 rounded-2xl border border-[#D0EBB7]/60 flex flex-col justify-between shadow-xs">
+                        <div class="space-y-3 overflow-y-auto no-scrollbar">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">✍️ 记账与心愿录入</h3>
+                            <form @submit.prevent="addSpot" class="space-y-2">
+                                <input type="text" v-model="newSpot.name" placeholder="想去的景点、宝藏餐厅名称..." required class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#D0EBB7]">
                                 <div class="grid grid-cols-2 gap-2">
-                                    <div class="flex gap-1 items-center bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
-                                        <span class="text-[9px] text-slate-400 shrink-0">⏱️时长:</span>
+                                    <div class="flex gap-1 items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5">
+                                        <span class="text-[10px] text-slate-400 shrink-0">⏱️时长:</span>
                                         <input type="number" v-model.number="newSpot.duration" min="0.5" step="0.5" required class="w-full text-xs font-mono bg-transparent text-right focus:outline-none">
+                                        <span class="text-[10px] text-slate-400 shrink-0">h</span>
                                     </div>
-                                    <div class="flex gap-1 items-center bg-slate-50 border border-slate-200 rounded-lg px-2 py-1">
-                                        <span class="text-[9px] text-slate-400 shrink-0">💰开销:</span>
+                                    <div class="flex gap-1 items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5">
+                                        <span class="text-[10px] text-slate-400 shrink-0">💰费用:</span>
                                         <input type="number" v-model.number="newSpot.cost" min="0" step="1" required class="w-full text-xs font-mono bg-transparent text-right focus:outline-none">
+                                        <span class="text-[10px] text-slate-400 shrink-0">元</span>
                                     </div>
                                 </div>
-
-                                <!-- Plan B 配置 -->
+                                
                                 <div class="pt-0.5">
-                                    <button type="button" @click="newSpot.showPlanB = !newSpot.showPlanB" class="text-[9px] text-emerald-700 hover:underline flex items-center gap-0.5 focus:outline-none">
-                                        {{ newSpot.showPlanB ? '▼ 折叠备用方案' : '▶ ➕ 绑定该项的 B 计划平替' }}
+                                    <button type="button" @click="newSpot.showPlanB = !newSpot.showPlanB" class="text-[10px] text-emerald-800 hover:underline focus:outline-none">
+                                        {{ newSpot.showPlanB ? '▼ 收起备用方案' : '▶ ➕ 绑定备用 Plan B 平替' }}
                                     </button>
-                                    <div v-if="newSpot.showPlanB" class="mt-1.5 space-y-1.5 p-2 bg-slate-50 rounded-lg border border-emerald-100 border-dashed">
-                                        <input type="text" v-model="newSpot.bName" placeholder="备选平替店名/备用公园..." class="w-full px-2 py-1 text-[10px] bg-white border border-slate-200 rounded-md focus:outline-none">
-                                        <div class="grid grid-cols-2 gap-1.5">
-                                            <input type="number" v-model.number="newSpot.bDuration" placeholder="备用h" class="bg-white border border-slate-200 rounded-md p-0.5 text-center text-[10px]">
-                                            <input type="number" v-model.number="newSpot.bCost" placeholder="备用¥" class="bg-white border border-slate-200 rounded-md p-0.5 text-center text-[10px]">
+                                    <div v-if="newSpot.showPlanB" class="mt-2 p-2 bg-slate-50 rounded-lg border border-[#D0EBB7] border-dashed space-y-1.5">
+                                        <input type="text" v-model="newSpot.bName" placeholder="备选店名/备用地点..." class="w-full px-2 py-1 text-[11px] bg-white border border-slate-200 rounded-md">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <input type="number" v-model.number="newSpot.bDuration" placeholder="备用h" class="bg-white border border-slate-200 rounded-md p-1 text-[10px] text-center">
+                                            <input type="number" v-model.number="newSpot.bCost" placeholder="备用¥" class="bg-white border border-slate-200 rounded-md p-1 text-[10px] text-center">
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer">塞入待分配池</button>
+                                <button type="submit" class="w-full py-2 bg-[#D0EBB7] hover:bg-[#c2e2a7] text-emerald-950 text-xs font-bold rounded-xl cursor-pointer">塞入待编排库</button>
                             </form>
                         </div>
-
-                        <!-- 愿望清单池列表区 -->
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 shrink-0 flex justify-between">
-                            <span>📦 待分拨资产流</span>
-                            <span class="font-mono">数量: {{ wishlist.length }}</span>
-                        </h3>
-                        <div class="flex-1 overflow-x-auto md:overflow-y-auto no-scrollbar relative min-h-[70px]"
-                             @dragover.prevent
-                             @drop="handleDrop('wishlist')">
-                            <transition-group name="card" tag="div" class="flex flex-row md:flex-col gap-2 pb-2">
-                                <div v-for="item in wishlist" :key="item.id"
-                                     draggable="true"
-                                     @dragstart="handleDragStart(item, { type: 'wishlist' })"
-                                     class="w-48 md:w-full shrink-0 group bg-[#fbfcfa] p-2.5 rounded-xl border border-emerald-100/60 hover:border-emerald-300 hover:shadow-xs transition-all cursor-grab active:cursor-grabbing relative flex flex-col justify-between">
-                                    <button @click.stop="deleteItem('wishlist', item.id)" class="absolute top-1.5 right-1.5 text-slate-300 hover:text-rose-500 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">✕</button>
-                                    <div>
-                                        <h4 class="text-xs font-semibold text-slate-800 truncate md:whitespace-normal">{{ item.name }}</h4>
-                                        <div v-if="item.planB" class="text-[9px] text-slate-400 bg-emerald-50 px-1 rounded mt-0.5 inline-block border border-emerald-100/40">
-                                            📋 战术备用: {{ item.planB.name }}
-                                        </div>
-                                    </div>
-                                    <div class="mt-1.5 flex items-center gap-2 font-mono text-[10px]">
-                                        <span class="text-slate-400">⏱️ {{ item.duration }}h</span>
-                                        <span class="text-emerald-700 font-medium">¥{{ item.cost }}</span>
-                                    </div>
-                                </div>
-                            </transition-group>
-                        </div>
-                    </aside>
-
-                    <!-- 右侧：每日看板大厅 (淡绿色调时间轴还原) -->
-                    <main class="flex-1 p-4 md:p-6 overflow-x-auto flex gap-5 items-start no-scrollbar bg-grid-green">
                         
-                        <div v-for="(day, dayIndex) in days" :key="day.id" 
-                             class="w-76 md:w-80 bg-white/90 border border-emerald-100/70 rounded-2xl shadow-xs flex flex-col max-h-full shrink-0">
-                            
-                            <!-- 看板头部 -->
-                            <div class="p-3.5 border-b border-emerald-50 flex items-center justify-between bg-white rounded-t-2xl">
-                                <div>
-                                    <h3 class="font-bold text-slate-900 text-xs md:text-sm tracking-wide">{{ day.name }}</h3>
-                                    <span :class="['text-[9px] md:text-[10px] px-1.5 py-0.5 rounded font-mono font-medium', 
-                                                  getDayTotal(day) > 12 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700']">
-                                        ⏱️ 饱和度: {{ getDayTotal(day) }} / 12 小时
-                                    </span>
-                                </div>
-                                <button @click="removeDay(day.id)" class="text-slate-300 hover:text-rose-500 text-xs p-1">删除</button>
-                            </div>
-
-                            <!-- 三阶时段网格 -->
-                            <div class="p-3 overflow-y-auto space-y-4 no-scrollbar flex-1 max-h-[50vh] md:max-h-none bg-emerald-50/10">
-                                
-                                <div v-for="slot in ['morning', 'afternoon', 'evening']" :key="slot" class="space-y-1">
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                        <span v-if="slot === 'morning'">🌅 上午时段</span>
-                                        <span v-if="slot === 'afternoon'">☀️ 下午时段</span>
-                                        <span v-if="slot === 'evening'">🌙 晚上打卡</span>
-                                        <span class="text-[9px] font-normal font-mono text-slate-400">({{ getSlotTotal(day, slot) }}h)</span>
-                                    </div>
-
-                                    <!-- 拖拽容器 -->
-                                    <div class="min-h-[85px] bg-white border border-emerald-50 rounded-xl p-2 transition-all duration-300 relative"
-                                         :class="{'border-emerald-500 bg-emerald-50/20 ring-2 ring-emerald-100': activeDropZone === `${day.id}-${slot}`}"
-                                         @dragover.prevent
-                                         @dragenter.prevent="activeDropZone = `${day.id}-${slot}`"
-                                         @dragleave="activeDropZone = null"
-                                         @drop="handleDrop('day', day.id, slot)">
-                                        
-                                        <div class="space-y-0 relative min-h-[65px]">
-                                            <div v-for="(item, itemIndex) in day.slots[slot]" :key="item.id" class="relative">
-                                                
-                                                <!-- 景点卡片主件 -->
-                                                <div draggable="true"
-                                                     @dragstart="handleDragStart(item, { type: 'day', dayId: day.id, slot: slot })"
-                                                     class="group/card bg-slate-50/80 border border-slate-100/80 p-2 rounded-lg hover:shadow-2xs transition-all cursor-grab active:cursor-grabbing relative z-10">
-                                                    <button @click.stop="deleteItem('day', item.id, day.id, slot)" class="absolute top-1.5 right-1.5 text-slate-300 hover:text-rose-500 opacity-100 md:opacity-0 group-hover/card:opacity-100 transition-opacity text-[9px]">✕</button>
-                                                    
-                                                    <h4 class="text-xs font-semibold text-slate-800 pr-3 line-clamp-1" :class="{'text-emerald-700 font-bold': item.isPlanBActive}">
-                                                        {{ item.name }}
-                                                    </h4>
-                                                    
-                                                    <div class="mt-1 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                                                        <div class="flex gap-2">
-                                                            <span>⏱️ {{ item.duration }}h</span>
-                                                            <span class="text-emerald-700">¥{{ item.cost }}</span>
-                                                        </div>
-                                                        <button v-if="item.planB" @click.stop="togglePlanB(item)"
-                                                                class="text-[9px] bg-white hover:bg-emerald-50 border border-slate-100 text-slate-500 hover:text-emerald-700 px-1 rounded transition-colors font-sans">
-                                                            🔄 {{ item.isPlanBActive ? '切回' : 'B平替' }}
-                                                        </button>
-                                                    </div>
-
-                                                    <div v-if="item.planB" class="mt-1 py-0.5 border-t border-slate-200/50 text-[9px] text-slate-400 flex justify-between">
-                                                        <span class="truncate max-w-[110px]">📋 备选: {{ item.planB.name }}</span>
-                                                        <span>{{ item.planB.duration }}h/¥{{ item.planB.cost }}</span>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 通勤线路间隙卡（还原高级时间轴线条） -->
-                                                <div v-if="itemIndex < day.slots[slot].length - 1" 
-                                                     class="relative my-2 ml-4 pl-3 border-l-2 border-emerald-200/60 flex items-center justify-between text-[10px]">
-                                                    <div class="absolute -left-[4px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400 border border-white"></div>
-                                                    
-                                                    <div class="flex items-center gap-1 text-slate-400">
-                                                        <select v-model="item.transport.type" @change="updateTransport(item)"
-                                                                class="bg-white border border-slate-200 rounded px-1 py-0.5 text-[9px] font-sans text-slate-600 focus:outline-none">
-                                                            <option value="subway">🚇 地铁系统</option>
-                                                            <option value="taxi">🚖 突击打车</option>
-                                                            <option value="walk">🏃 徒步奔袭</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="font-mono text-slate-400 scale-90 origin-right">
-                                                        <span>{{ item.transport.duration }}h</span>
-                                                        <span class="mx-0.5">|</span>
-                                                        <span class="text-amber-700 font-medium">¥{{ item.transport.cost }}</span>
-                                                    </div>
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                        <div v-if="day.slots[slot].length === 0" class="absolute inset-0 flex items-center justify-center text-slate-300 text-[10px] pointer-events-none">
-                                            拖拽卡片至此
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <!-- 每日综合算账结算板 -->
-                            <div class="p-3.5 border-t border-emerald-50 bg-white rounded-b-2xl text-[11px] space-y-0.5">
-                                <div class="flex justify-between text-slate-400">
-                                    <span>今日累积开销 (含通勤):</span>
-                                    <span class="font-mono font-bold text-slate-700">¥ {{ getDayCost(day) }}</span>
-                                </div>
-                                <div class="flex justify-between font-bold pt-1 border-t border-dashed border-slate-100">
-                                    <span>战术预算结余:</span>
-                                    <span :class="['font-mono text-xs', (globalBudget - getDayCost(day)) < 0 ? 'text-rose-600 animate-pulse' : 'text-emerald-700']">
-                                        ¥ {{ globalBudget - getDayCost(day) }}
-                                    </span>
-                                </div>
-                            </div>
-
-                        </div>
-                    </main>
-                </div>
-            </div>
-            
-        </transition>
-    </div>
-
-    <!-- 逻辑控制台 -->
-    <script>
-        const { createApp, ref, computed } = Vue;
-
-        createApp({
-            setup() {
-                const currentPage = ref('landing');
-                const destination = ref('北京'); // 默认初始城市
-                const globalBudget = ref(1200);
-
-                // 心愿待分配池数据
-                const wishlist = ref([
-                    { id: 1, name: '天安门广场看升旗', duration: 2, cost: 0, transport: { type: 'subway', duration: 0.5, cost: 5 } },
-                    { id: 3, name: '全聚德烤鸭经典突击午餐', duration: 1.5, cost: 280, transport: { type: 'subway', duration: 0.5, cost: 5 } }
-                ]);
-
-                // 核心预设景点大数据矩阵（智能推荐引擎库）
-                const recommendationDatabase = {
-                    '北京': [
-                        { name: '故宫博物院深度大盘游', duration: 4.5, cost: 60, isPlanBActive: false, planB: { name: '景山公园+北海游湖平替', duration: 2.5, cost: 15 } },
-                        { name: '什刹海慢播夜景酒吧', duration: 2, cost: 120, isPlanBActive: false, planB: { name: '南锣鼓巷深夜小吃狂刷', duration: 1.5, cost: 40 } },
-                        { name: '颐和园皇家园林打卡', duration: 3.5, cost: 30 },
-                        { name: '天坛公园祈年殿出片', duration: 2, cost: 28 }
-                    ],
-                    '上海': [
-                        { name: '外滩璀璨夜景漫步', duration: 1.5, cost: 0, isPlanBActive: false, planB: { name: '黄浦江豪华游轮渡轮', duration: 1, cost: 2 } },
-                        { name: '迪士尼乐园全日突击', duration: 8, cost: 475 },
-                        { name: '武康路老洋房优雅闲逛', duration: 2, cost: 30 },
-                        { name: '陆家嘴三件套绝佳摄影点', duration: 1, cost: 0 }
-                    ],
-                    '成都': [
-                        { name: '大熊猫繁育基地看花花', duration: 4, cost: 55, isPlanBActive: false, planB: { name: '人民公园鹤鸣茶社掏耳', duration: 2, cost: 30 } },
-                        { name: '宽窄巷子川剧变脸突击', duration: 2, cost: 80 },
-                        { name: '锦里古镇夜游吃伤心凉粉', duration: 1.5, cost: 35 },
-                        { name: '春熙路超辣老火锅聚餐', duration: 2, cost: 130 }
-                    ]
-                };
-
-                // 根据当前输入的地点动态计算推荐数据
-                const currentRecommendations = computed(() => {
-                    const city = destination.value.trim();
-                    if (recommendationDatabase[city]) {
-                        return recommendationDatabase[city];
-                    }
-                    // 兜底通用机制（如果用户输入了小众城市）
-                    return [
-                        { name: `${city}核心地标打卡`, duration: 2, cost: 0 },
-                        { name: `${city}人气美食老街`, duration: 1.5, cost: 50 },
-                        { name: `${city}本地夜市探索`, duration: 2, cost: 40 },
-                        { name: `${city}全景日落观测点`, duration: 1, cost: 0 }
-                    ];
-                });
-
-                const days = ref([
-                    { id: 1, name: 'Day 1', slots: { morning: [], afternoon: [], evening: [] } },
-                    { id: 2, name: 'Day 2', slots: { morning: [], afternoon: [], evening: [] } }
-                ]);
-
-                const newSpot = ref({ name: '', duration: 1, cost: 0, showPlanB: false, bName: '', bDuration: 1, bCost: 0 });
-                const draggedItem = ref(null);
-                const dragSource = ref(null);
-                const activeDropZone = ref(null);
-
-                // 点击进入工作台策划页
-                const startPlanning = () => {
-                    if(!destination.value.trim()){
-                        destination.value = '未知城市';
-                    }
-                    currentPage.value = 'app';
-                };
-
-                // 吸收引入推荐卡片到待分配池中
-                const absorbRecommendation = (rec) => {
-                    wishlist.value.push({
-                        id: Date.now() + Math.random(),
-                        name: rec.name,
-                        duration: rec.duration,
-                        cost: rec.cost,
-                        isPlanBActive: false,
-                        planB: rec.planB ? { ...rec.planB } : null,
-                        transport: { type: 'subway', duration: 0.5, cost: 5 }
-                    });
-                };
-
-                // 自定义添加新资产
-                const addSpot = () => {
-                    if (!newSpot.value.name) return;
-                    let planBData = null;
-                    if (newSpot.value.showPlanB && newSpot.value.bName) {
-                        planBData = {
-                            name: newSpot.value.bName,
-                            duration: Number(newSpot.value.bDuration) || 1,
-                            cost: Number(newSpot.value.bCost) || 0
-                        };
-                    }
-
-                    wishlist.value.push({
-                        id: Date.now(),
-                        name: newSpot.value.name,
-                        duration: Number(newSpot.value.duration) || 1,
-                        cost: Number(newSpot.value.cost) || 0,
-                        isPlanBActive: false,
-                        planB: planBData,
-                        transport: { type: 'subway', duration: 0.5, cost: 5 }
-                    });
-
-                    newSpot.value.name = '';
-                    newSpot.value.duration = 1;
-                    newSpot.value.cost = 0;
-                    newSpot.value.bName = '';
-                    newSpot.value.bDuration = 1;
-                    newSpot.value.bCost = 0;
-                    newSpot.value.showPlanB = false;
-                };
-
-                // 物理指针对调切备用方案 (Plan B)
-                const togglePlanB = (item) => {
-                    if (!item.planB) return;
-                    const temp = { name: item.name, duration: item.duration, cost: item.cost };
-                    item.name = item.planB.name;
-                    item.duration = item.planB.duration;
-                    item.cost = item.planB.cost;
-                    
-                    item.planB.name = temp.name;
-                    item.planB.duration = temp.duration;
-                    item.planB.cost = temp.cost;
-                    item.isPlanBActive = !item.isPlanBActive;
-                };
-
-                // 通勤耗损调节
-                const updateTransport = (item) => {
-                    if (item.transport.type === 'subway') {
-                        item.transport.duration = 0.5;
-                        item.transport.cost = 5;
-                    } else if (item.transport.type === 'taxi') {
-                        item.transport.duration = 0.3;
-                        item.transport.cost = 35;
-                    } else if (item.transport.type === 'walk') {
-                        item.transport.duration = 0.8;
-                        item.transport.cost = 0;
-                    }
-                };
-
-                const addDay = () => {
-                    const newDayId = days.value.length ? Math.max(...days.value.map(d => d.id)) + 1 : 1;
-                    days.value.push({
-                        id: newDayId,
-                        name: `Day ${days.value.length + 1}`,
-                        slots: { morning: [], afternoon: [], evening: [] }
-                    });
-                };
-
-                const removeDay = (dayId) => {
-                    const day = days.value.find(d => d.id === dayId);
-                    if (day) {
-                        ['morning', 'afternoon', 'evening'].forEach(slot => {
-                            wishlist.value.push(...day.slots[slot]);
-                        });
-                    }
-                    days.value = days.value.filter(d => d.id !== dayId);
-                    days.value.forEach((d, index) => {
-                        d.name = `Day ${index + 1}`;
-                    });
-                };
-
-                const deleteItem = (type, itemId, dayId = null, slot = null) => {
-                    if (type === 'wishlist') {
-                        wishlist.value = wishlist.value.filter(i => i.id !== itemId);
-                    } else {
-                        const day = days.value.find(d => d.id === dayId);
-                        if (day) {
-                            day.slots[slot] = day.slots[slot].filter(i => i.id !== itemId);
-                        }
-                    }
-                };
-
-                const handleDragStart = (item, source) => {
-                    draggedItem.value = item;
-                    dragSource.value = source;
-                };
-
-                const handleDrop = (targetType, dayId = null, slot = null) => {
-                    // 如果拖拽源是智能推荐，特殊处理复制克隆逻辑，不删除源卡片
-                    if (dragSource.value && dragSource.value.type === 'recommendation') {
-                        const rec = draggedItem.value;
-                        const clonedItem = {
-                            id: Date.now() + Math.random(),
-                            name: rec.name,
-                            duration: rec.duration,
-                            cost: rec.cost,
-                            isPlanBActive: false,
-                            planB: rec.planB ? { ...rec.planB } : null,
-                            transport: { type: 'subway', duration: 0.5, cost: 5 }
-                        };
-                        if (targetType === 'wishlist') {
-                            wishlist.value.push(clonedItem);
-                        } else if (targetType === 'day') {
-                            const tgtDay = days.value.find(d => d.id === dayId);
-                            if (tgtDay) tgtDay.slots[slot].push(clonedItem);
-                        }
-                    } else if (draggedItem.value) {
-                        // 标准卡片移动迁移逻辑
-                        if (dragSource.value.type === 'wishlist') {
-                            wishlist.value = wishlist.value.filter(i => i.id !== draggedItem.value.id);
-                        } else if (dragSource.value.type === 'day') {
-                            const srcDay = days.value.find(d => d.id === dragSource.value.dayId);
-                            if (srcDay) {
-                                srcDay.slots[dragSource.value.slot] = srcDay.slots[dragSource.value.slot].filter(i => i.id !== draggedItem.value.id);
-                            }
-                        }
-
-                        if (targetType === 'wishlist') {
-                            wishlist.value.push(draggedItem.value);
-                        } else if (targetType === 'day') {
-                            const tgtDay = days.value.find(d => d.id === dayId);
-                            if (tgtDay) tgtDay.slots[slot].push(draggedItem.value);
-                        }
-                    }
-
-                    draggedItem.value = null;
-                    dragSource.value = null;
-                    activeDropZone.value = null;
-                };
-
-                const getSlotTotal = (day, slot) => {
-                    let total = 0;
-                    const items = day.slots[slot];
-                    items.forEach((item, index) => {
-                        total += item.duration;
-                        if (index < items.length - 1) {
-                            total += item.transport.duration;
-                        }
-                    });
-                    return parseFloat(total.toFixed(1));
-                };
-
-                const getDayTotal = (day) => {
-                    let total = 0;
-                    ['morning', 'afternoon', 'evening'].forEach(slot => {
-                        total += getSlotTotal(day, slot);
-                    });
-                    return parseFloat(total.toFixed(1));
-                };
-
-                const getDayCost = (day) => {
-                    let total = 0;
-                    ['morning', 'afternoon', 'evening'].forEach(slot => {
-                        const items = day.slots[slot];
-                        items.forEach((item, index) => {
-                            total += (item.cost || 0);
-                            if (index < items.length - 1) {
-                                total += (item.transport.cost || 0);
-                            }
-                        });
-                    });
-                    return total;
-                };
-
-                return {
-                    currentPage,
-                    destination,
-                    globalBudget,
-                    wishlist,
-                    currentRecommendations,
-                    days,
-                    newSpot,
-                    activeDropZone,
-                    startPlanning,
-                    absorbRecommendation,
-                    addSpot,
-                    addDay,
-                    removeDay,
-                    deleteItem,
-                    handleDragStart,
-                    handleDrop,
-                    getSlotTotal,
-                    getDayTotal,
-                    getDayCost,
-                    togglePlanB,
-                    updateTransport
-                };
-            }
-        }).mount('#app');
-    </script>
-</body>
-</html>
+                        <div class="pt-3 border-t border-slate-100 space-y-1.5 text-xs">
+                            <div class="flex justify-between text-slate-400"><span>已选资产项:</span><span class="font-bold text-slate-800">{{ wishlist.length }} 个</span></div>
+                            <div class="flex justify-between text-slate-400">
