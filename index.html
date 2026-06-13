@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>特种兵旅游行程规划看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* Vue Transition Group 平滑过渡动画 */
+        .card-move,
+        .card-enter-active,
+        .card-leave-active {
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .card-enter-from,
+        .card-leave-to {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .card-leave-active {
+            position: absolute;
+            width: 100%;
+        }
+        /* 隐藏滚动条但保留滚动功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans selection:bg-indigo-100">
+
+    <div id="app" class="flex flex-col h-screen overflow-hidden" v-cloak>
+        
+        <header class="bg-white border-b border-slate-100 px-8 py-4 flex items-center justify-between shrink-0">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                    ⚡ 特种兵旅游行程规划看板
+                </h1>
+                <p class="text-xs text-slate-400 mt-0.5">有限的时间，无限的风景。合理规划每一分钟。</p>
+            </div>
+            <div class="flex gap-2">
+                <button @click="addDay" class="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors">
+                    + 增加出行天数
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden">
+            
+            <aside class="w-80 bg-white border-r border-slate-100 flex flex-col p-6 shrink-0"
+                   @dragover.prevent
+                   @drop="handleDrop('wishlist')">
+                
+                <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4 flex items-center justify-between">
+                    <span>💡 愿望清单池</span>
+                    <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-normal">{{ wishlist.length }}</span>
+                </h2>
+
+                <form @submit.prevent="addSpot" class="space-y-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <input type="text" v-model="newSpot.name" placeholder="想去的景点或餐厅..." required
+                           class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors">
+                    <div class="flex gap-2 items-center">
+                        <label class="text-xs text-slate-400 shrink-0">预计逗留:</label>
+                        <input type="number" v-model.number="newSpot.duration" min="0.5" step="0.5" required
+                               class="w-full px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors">
+                        <span class="text-xs text-slate-400 shrink-0">小时</span>
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-slate-900 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition-colors">
+                        加入清单
+                    </button>
+                </form>
+
+                <div class="flex-1 overflow-y-auto no-scrollbar relative min-h-[150px]">
+                    <transition-group name="card" tag="div" class="space-y-3 pb-6">
+                        <div v-for="item in wishlist" :key="item.id"
+                             draggable="true"
+                             @dragstart="handleDragStart(item, { type: 'wishlist' })"
+                             class="group bg-white p-4 rounded-xl border border-slate-100 shadow-xs hover:shadow-md hover:border-indigo-200 transition-all cursor-grab active:cursor-grabbing relative">
+                            <button @click.stop="deleteItem('wishlist', item.id)" class="absolute top-2 right-2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs">✕</button>
+                            <h3 class="text-sm font-medium text-slate-800 pr-4">{{ item.name }}</h3>
+                            <div class="mt-2 flex items-center text-xs text-slate-400">
+                                <span class="bg-slate-100 px-2 py-0.5 rounded-md font-mono">⏱️ {{ item.duration }} 小时</span>
+                            </div>
+                        </div>
+                    </transition-group>
+                    <div v-if="wishlist.length === 0" class="absolute inset-0 flex flex-col items-center justify-center text-slate-300 text-xs pointer-events-none border-2 border-dashed border-slate-100 rounded-xl">
+                        <span>暂无愿望卡片</span>
+                        <span>可从右侧或上方添加</span>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="flex-1 bg-slate-50 p-8 overflow-x-auto flex gap-6 items-start no-scrollbar">
+                
+                <div v-for="(day, dayIndex) in days" :key="day.id" 
+                     class="w-80 bg-white border border-slate-100 rounded-2xl shadow-xs flex flex-col max-h-full shrink-0">
+                    
+                    <div class="p-4 border-b border-slate-50 flex items-center justify-between bg-white rounded-t-2xl">
+                        <div>
+                            <h3 class="font-bold text-slate-800">{{ day.name }}</h3>
+                            <span :class="['text-[11px] px-2 py-0.5 rounded-full font-medium', 
+                                          getDayTotal(day) > 12 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600']">
+                                总时长: {{ getDayTotal(day) }} 小时
+                            </span>
+                        </div>
+                        <button @click="removeDay(day.id)" class="text-slate-300 hover:text-rose-500 transition-colors text-xs p-1">删除</button>
+                    </div>
+
+                    <div class="p-4 overflow-y-auto space-y-4 no-scrollbar bg-slate-50/50">
+                        
+                        <div v-for="slot in ['morning', 'afternoon', 'evening']" :key="slot"
+                             class="space-y-2">
+                            <div class="text-xs font-semibold text-slate-400 flex items-center gap-1">
+                                <span v-if="slot === 'morning'">🌅 上午</span>
+                                <span v-if="slot === 'afternoon'">☀️ 下午</span>
+                                <span v-if="slot === 'evening'">🌙 晚上</span>
+                                <span class="text-[10px] font-normal text-slate-400 font-mono">({{ getSlotTotal(day, slot) }}h)</span>
+                            </div>
+
+                            <div class="min-h-[100px] bg-white border border-slate-100 rounded-xl p-3 transition-all duration-200 relative group"
+                                 :class="{'border-indigo-400 bg-indigo-50/30 ring-2 ring-indigo-100': activeDropZone === `${day.id}-${slot}`}"
+                                 @dragover.prevent
+                                 @dragenter.prevent="activeDropZone = `${day.id}-${slot}`"
+                                 @dragleave="activeDropZone = null"
+                                 @drop="handleDrop('day', day.id, slot)">
+                                
+                                <transition-group name="card" tag="div" class="space-y-2 relative min-h-[76px]">
+                                    <div v-for="item in day.slots[slot]" :key="item.id"
+                                         draggable="true"
+                                         @dragstart="handleDragStart(item, { type: 'day', dayId: day.id, slot: slot })"
+                                         class="group/card bg-slate-50 border border-slate-100 p-3 rounded-lg shadow-2xs hover:shadow-xs transition-all cursor-grab active:cursor-grabbing relative">
+                                        <button @click.stop="deleteItem('day', item.id, day.id, slot)" class="absolute top-1.5 right-1.5 text-slate-300 hover:text-rose-500 opacity-0 group-hover/card:opacity-100 transition-opacity text-[10px]">✕</button>
+                                        <h4 class="text-xs font-medium text-slate-700 pr-3">{{ item.name }}</h4>
+                                        <div class="mt-1 flex items-center text-[10px] font-mono text-slate-400">⏱️ {{ item.duration }}h</div>
+                                    </div>
+                                </transition-group>
+
+                                <div v-if="day.slots[slot].length === 0" class="absolute inset-0 flex items-center justify-center text-slate-300 text-[11px] pointer-events-none group-hover:text-slate-400 transition-colors">
+                                    拖拽卡片至此
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                // 初始化默认数据
+                const wishlist = ref([
+                    { id: 1, name: '天安门广场看升旗', duration: 2 },
+                    { id: 2, name: '故宫博物院深度游', duration: 4.5 },
+                    { id: 3, name: '南锣鼓巷尝小吃', duration: 1.5 },
+                    { id: 4, name: '什刹海夜景散步', duration: 2 },
+                ]);
+
+                const days = ref([
+                    { id: 1, name: 'Day 1', slots: { morning: [], afternoon: [], evening: [] } },
+                    { id: 2, name: 'Day 2', slots: { morning: [], afternoon: [], evening: [] } }
+                ]);
+
+                const newSpot = ref({ name: '', duration: 1 });
+                const draggedItem = ref(null);
+                const dragSource = ref(null);
+                const activeDropZone = ref(null);
+
+                // 添加卡片到清单
+                const addSpot = () => {
+                    if (!newSpot.value.name) return;
+                    wishlist.value.push({
+                        id: Date.now(),
+                        name: newSpot.value.name,
+                        duration: newSpot.value.duration
+                    });
+                    newSpot.value.name = '';
+                    newSpot.value.duration = 1;
+                };
+
+                // 增加出行天数
+                const addDay = () => {
+                    const newDayId = days.value.length ? Math.max(...days.value.map(d => d.id)) + 1 : 1;
+                    days.value.push({
+                        id: newDayId,
+                        name: `Day ${days.value.length + 1}`,
+                        slots: { morning: [], afternoon: [], evening: [] }
+                    });
+                };
+
+                // 删除出行天数（卡片自动回流）
+                const removeDay = (dayId) => {
+                    const day = days.value.find(d => d.id === dayId);
+                    if (day) {
+                        ['morning', 'afternoon', 'evening'].forEach(slot => {
+                            wishlist.value.push(...day.slots[slot]);
+                        });
+                    }
+                    days.value = days.value.filter(d => d.id !== dayId);
+                    days.value.forEach((d, index) => {
+                        d.name = `Day ${index + 1}`;
+                    });
+                };
+
+                // 删除单项卡片
+                const deleteItem = (type, itemId, dayId = null, slot = null) => {
+                    if (type === 'wishlist') {
+                        wishlist.value = wishlist.value.filter(i => i.id !== itemId);
+                    } else {
+                        const day = days.value.find(d => d.id === dayId);
+                        if (day) {
+                            day.slots[slot] = day.slots[slot].filter(i => i.id !== itemId);
+                        }
+                    }
+                };
+
+                // 拖拽逻辑
+                const handleDragStart = (item, source) => {
+                    draggedItem.value = item;
+                    dragSource.value = source;
+                };
+
+                const handleDrop = (targetType, dayId = null, slot = null) => {
+                    if (!draggedItem.value) return;
+
+                    if (dragSource.value.type === 'wishlist') {
+                        wishlist.value = wishlist.value.filter(i => i.id !== draggedItem.value.id);
+                    } else if (dragSource.value.type === 'day') {
+                        const srcDay = days.value.find(d => d.id === dragSource.value.dayId);
+                        if (srcDay) {
+                            srcDay.slots[dragSource.value.slot] = srcDay.slots[dragSource.value.slot].filter(i => i.id !== draggedItem.value.id);
+                        }
+                    }
+
+                    if (targetType === 'wishlist') {
+                        wishlist.value.push(draggedItem.value);
+                    } else if (targetType === 'day') {
+                        const tgtDay = days.value.find(d => d.id === dayId);
+                        if (tgtDay) {
+                            tgtDay.slots[slot].push(draggedItem.value);
+                        }
+                    }
+
+                    draggedItem.value = null;
+                    dragSource.value = null;
+                    activeDropZone.value = null;
+                };
+
+                const getSlotTotal = (day, slot) => {
+                    return day.slots[slot].reduce((sum, item) => sum + item.duration, 0);
+                };
+
+                const getDayTotal = (day) => {
+                    let total = 0;
+                    ['morning', 'afternoon', 'evening'].forEach(slot => {
+                        total += getSlotTotal(day, slot);
+                    });
+                    return total;
+                };
+
+                return {
+                    wishlist,
+                    days,
+                    newSpot,
+                    activeDropZone,
+                    addSpot,
+                    addDay,
+                    removeDay,
+                    deleteItem,
+                    handleDragStart,
+                    handleDrop,
+                    getSlotTotal,
+                    getDayTotal
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
