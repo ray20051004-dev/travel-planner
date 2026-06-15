@@ -1,636 +1,491 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>A TRIP TO YOUR DREAM - 特种兵旅程高精设计器</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.0.8/DragDropTouch.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A TRIP TO YOUR DREAM - 特种兵旅程高精设计器</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5fdf9 0%, #e8f7f0 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #c2eed8;
+      border-radius: 4px;
+    }
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=M+PLUS+Rounded+1c:wght@500;700&family=Fredoka:wght@600&display=swap" rel="stylesheet">
-    
-    <style>
-        [v-cloak] { display: none; }
+    /* 配合网站 Mint 统一色调的战术雷达光圈动画 */
+    .tactical-ping {
+      background: transparent;
+      border: none;
+    }
+    .ping-ring {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #10b981; /* 统一为网站的 Mint 绿 */
+      border-radius: 50%;
+      position: absolute;
+      top: -16px;
+      left: -16px;
+      animation: radar-beam 1.8s infinite ease-out;
+      pointer-events: none;
+    }
+    .ping-center {
+      width: 8px;
+      height: 8px;
+      background-color: #059669;
+      border-radius: 50%;
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      box-shadow: 0 0 8px #10b981;
+    }
+    @keyframes radar-beam {
+      0% { transform: scale(0.3); opacity: 1; }
+      100% { transform: scale(3.5); opacity: 0; }
+    }
 
-        body, input, button, select, textarea {
-            font-family: 'M PLUS Rounded 1c', 'Microsoft YaHei', sans-serif !important;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .handwritten-brand {
-            font-family: 'Caveat', 'Fredoka', cursive !important;
-            color: #ffb7c5 !important;
-        }
-        
-        .eng-sub {
-            font-family: 'Fredoka', cursive !important;
-            color: #ffb7c5 !important;
-        }
-
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease; }
-        .fade-enter-from, .fade-leave-to { opacity: 0; }
-        .card-move, .card-enter-active, .card-leave-active { transition: all 0.3s ease; }
-        .card-enter-from, .card-leave-to { opacity: 0; transform: translateY(10px); }
-        .card-leave-active { position: absolute; width: 100%; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .bg-grid-green {
-            background-size: 35px 35px;
-            background-image: linear-gradient(to right, rgba(208, 235, 183, 0.4) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(208, 235, 183, 0.4) 1px, transparent 1px);
-        }
-        
-        .leaflet-container { font-family: 'M PLUS Rounded 1c', sans-serif !important; z-index: 1; }
-
-        .sticky-note {
-            background: linear-gradient(135deg, #fcfcfc 0%, #f4fbf7 100%);
-            border-top: 14px solid #D0EBB7;
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(208, 235, 183, 0.2);
-            position: relative;
-        }
-        .sticky-note::after {
-            content: ""; position: absolute; bottom: 0; right: 0;
-            border-width: 18px 18px 0 0; border-style: solid;
-            border-color: #e2f4d4 #fff #fff #e2f4d4;
-            box-shadow: -2px -2px 6px rgba(0,0,0,0.04);
-        }
-
-        .map-pulse-highlight {
-            animation: mapPulse 1.2s infinite alternate;
-            border: 2px solid #fff !important;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8) !important;
-            z-index: 9999 !important;
-        }
-        @keyframes mapPulse {
-            0% { transform: scale(1); background-color: #ef4444; }
-            100% { transform: scale(1.4); background-color: #b91c1c; }
-        }
-    </style>
+    /* Leaflet 弹出层统一成网站色调 */
+    .leaflet-popup-content-wrapper {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      border: 2px solid #10b981 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    }
+    .leaflet-popup-tip {
+      background: #ffffff !important;
+      border: 2px solid #10b981 !important;
+    }
+  </style>
 </head>
-<body class="h-screen w-screen relative text-slate-700 overflow-hidden bg-[#F7FDF3]">
+<body class="min-h-screen text-slate-800 antialiased p-4 md:p-8 flex items-center justify-center">
 
-    <div id="app" class="h-full w-full relative" v-cloak>
+  <div id="app" class="w-full max-w-6xl bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-emerald-100/50 p-6 md:p-8 flex flex-col min-h-[680px]">
+    
+    <header class="flex items-center justify-between border-b border-emerald-100 pb-4 mb-6">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">🍃</span>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-emerald-900">MINT SYSTEM V6.5</h1>
+          <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600/80">A TRIP TO YOUR DREAM</p>
+        </div>
+      </div>
+      <div class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full font-mono font-medium">
+        GPS_TACTICAL_ACTIVE: TRUE
+      </div>
+    </header>
 
-        <div id="hidden-snapshot-board" class="absolute top-0 left-0 w-[480px] z-0 p-8 bg-[#F7FDF3] bg-grid-green" style="min-height: 800px;">
-            <div class="text-center space-y-2 mb-8">
-                <h1 class="text-5xl font-bold handwritten-brand pt-4 drop-shadow-sm">A TRIP TO YOUR DREAM</h1>
-                <p class="text-xs text-emerald-800/70 font-bold tracking-widest">📍 行程手账总盘 · 目标城市：{{ destination }}</p>
-                <div class="w-24 h-1 bg-gradient-to-r from-transparent via-[#ffb7c5] to-transparent mx-auto mt-2"></div>
-            </div>
+    <main v-if="currentPage === 1" class="flex-1 flex flex-col justify-center items-center max-w-md mx-auto w-full gap-6 py-10">
+      <div class="text-center mb-4">
+        <h2 class="text-2xl font-black text-slate-900 mb-2">出征目的地与核心预算</h2>
+        <p class="text-sm text-slate-500">请输入你的出行大本营，系统将实时加载战术底图</p>
+      </div>
 
-            <div class="space-y-8">
-                <div v-for="day in days" :key="day.id" class="sticky-note p-6 rounded-b-xl rounded-tr-xl transform rotate-[-0.5deg] even:rotate-[0.5deg]">
-                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl drop-shadow-sm pointer-events-none z-10">📌</div>
-                    
-                    <div class="flex justify-between items-baseline border-b-2 border-dashed border-[#D0EBB7] pb-3 mb-4">
-                        <h3 class="text-xl font-bold eng-sub !text-emerald-900 drop-shadow-sm">{{ day.name }} PLAN</h3>
-                        <span class="text-[11px] font-mono font-bold bg-[#D0EBB7]/50 px-2 py-1 rounded-md text-emerald-900">预算结余: ¥{{ globalBudget - getDayCost(day) }}</span>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div v-for="slot in ['morning', 'afternoon', 'evening']" :key="slot">
-                            <div v-if="day.slots[slot].length > 0" class="space-y-2">
-                                <div class="text-[11px] font-bold text-emerald-800/80 bg-emerald-100/60 inline-block px-2 py-0.5 rounded">
-                                    <span v-if="slot === 'morning'">🌅 上午</span>
-                                    <span v-if="slot === 'afternoon'">☀️ 下午</span>
-                                    <span v-if="slot === 'evening'">🌙 晚上</span>
-                                </div>
-                                <div class="pl-3 border-l-4 border-[#D0EBB7]/60 space-y-2.5">
-                                    <div v-for="item in day.slots[slot]" :key="item.id" class="text-[13px] flex justify-between items-center text-slate-700">
-                                        <span class="font-bold flex items-center gap-1.5"><span class="text-[#ffb7c5]">✨</span> {{ item.name }}</span>
-                                        <span class="font-mono text-[11px] text-emerald-800 bg-white px-1.5 py-0.5 border border-emerald-100 rounded">⏱️{{ item.duration }}h | ¥{{ item.cost }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-if="getDayTotal(day) === 0" class="text-xs text-slate-400 italic text-center py-6">今日留白，自由发挥。</div>
-                    </div>
-
-                    <div class="mt-5 pt-3 border-t border-[#D0EBB7]/50 flex justify-between text-[11px] font-mono font-bold text-emerald-800/60">
-                        <span>⌛ 饱和度: {{ getDayTotal(day) }}h / 12h</span>
-                        <span>💰 今日总耗: ¥{{ getDayCost(day) }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center pt-8 pb-4 text-[10px] font-mono text-emerald-800/50 tracking-widest uppercase">Generated by Mint Planner © 2026</div>
+      <div class="w-full space-y-4">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-bold text-emerald-900 flex items-center gap-2">🌍 设定目的地城市</label>
+          <input type="text" v-model="destination" placeholder="例如：东京、巴黎、北京" class="w-full bg-slate-50 border-2 border-slate-200/60 rounded-xl p-3.5 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all font-medium">
         </div>
 
-        <div class="absolute inset-0 z-50 h-full w-full flex flex-col bg-[#F7FDF3]">
-            <transition name="fade" mode="out-in">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-bold text-emerald-900 flex items-center gap-2">💰 财务硬核总盘 (元)</label>
+          <input type="number" v-model.number="globalBudget" placeholder="设定你的硬核预算" class="w-full bg-slate-50 border-2 border-slate-200/60 rounded-xl p-3.5 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all font-medium">
+        </div>
+      </div>
+
+      <button @click="goToPage2" class="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-bold p-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
+        配置心愿资产与预算 →
+      </button>
+    </main>
+
+    <main v-if="currentPage === 2" class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="flex flex-col justify-between">
+        <div class="space-y-6">
+          <div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">STAGE 02</span>
+            <h2 class="text-2xl font-bold text-slate-900 mt-2">📍 {{ destination }} 手账编排池</h2>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200/60 pb-2 flex items-center gap-2">✍️ 记账与心愿录入</h3>
+            <div class="space-y-3">
+              <input type="text" v-model="newItem.name" placeholder="输入你想去的目标具体地点（如：东京铁塔）" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-400">
+              <div class="grid grid-cols-2 gap-3">
+                <input type="number" v-model.number="newItem.duration" placeholder="⏱️ 时长(小时)" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-400">
+                <input type="number" v-model.number="newItem.cost" placeholder="💰 费用(元)" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-400">
+              </div>
+              <button @click="addToWishlist" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold p-2.5 rounded-lg text-sm transition-all cursor-pointer">塞入待编排库</button>
+            </div>
+          </div>
+
+          <div class="text-sm space-y-1 bg-emerald-50/50 rounded-xl p-4 border border-emerald-100/50">
+            <div class="flex justify-between"><span class="text-slate-600">已选资产项:</span> <span class="font-bold text-emerald-800">{{ wishlist.length }} 个</span></div>
+            <div class="flex justify-between"><span class="text-slate-600">预算累计占用:</span> <span class="font-bold text-emerald-800">¥ {{ wishlistTotalCost }}</span></div>
+          </div>
+        </div>
+
+        <div class="flex gap-4 mt-6">
+          <button @click="currentPage = 1" class="flex-1 border-2 border-slate-200 hover:bg-slate-50 font-bold p-3.5 rounded-xl transition-all text-sm cursor-pointer">← 返回</button>
+          <button @click="goToPage3" class="flex-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold p-3.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-sm flex items-center justify-center gap-1 cursor-pointer">进入具体旅游安排 →</button>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex flex-col">
+        <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200/60 pb-2 mb-4">✨ 针对 {{ destination }} 推荐打卡点</h3>
+        <div class="flex-1 overflow-y-auto custom-scroll space-y-3 max-h-[350px] pr-1">
+          <div v-for="rec in recommendations" :key="rec.name" class="bg-white p-3.5 border border-slate-100 rounded-xl flex items-center justify-between hover:border-emerald-200 transition-all">
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm">{{ rec.name }}</h4>
+              <p class="text-xs text-slate-400 mt-0.5">⏱️ {{ rec.duration }}h | ¥{{ rec.cost }}</p>
+            </div>
+            <button @click="absorbRecommendation(rec)" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer">＋ 吸收</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <main v-if="currentPage === 3" class="flex-1 flex flex-col gap-6">
+      
+      <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-6">
+          <div class="text-sm font-medium text-slate-600">📍 目标大本营：<span class="font-bold text-emerald-700">{{ destination }}</span></div>
+          <div class="text-sm font-medium text-slate-600">💰 总预算：<span class="font-bold text-emerald-700">¥ {{ globalBudget }}</span></div>
+        </div>
+        <div class="flex gap-3">
+          <button @click="addDay" class="border border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-xs font-bold px-3 py-2 rounded-lg transition-all cursor-pointer">+ 加天数</button>
+          <button @click="currentPage = 2" class="border border-slate-200 hover:bg-slate-50 text-xs font-bold px-3 py-2 rounded-lg transition-all cursor-pointer">← 返回补充</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-stretch">
+        
+        <div class="lg:col-span-5 flex flex-col gap-6 max-h-[500px] overflow-y-auto custom-scroll pr-1">
+          
+          <div class="bg-amber-50/40 border border-amber-100 rounded-2xl p-4">
+            <h3 class="text-xs font-bold text-amber-800 tracking-wider uppercase mb-3 flex items-center justify-between">
+              <span>📦 待编排池 ({{ wishlist.length }})</span>
+              <span class="text-[10px] text-amber-600 font-normal">拖拽或点击定位高亮</span>
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              <div v-for="(item, idx) in wishlist" :key="idx" class="bg-white border border-amber-200/60 shadow-sm p-2.5 rounded-xl flex flex-col gap-1 text-xs min-w-[120px] relative group">
+                <button @click="removeWishItem(idx)" class="absolute -top-1 -right-1 bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] cursor-pointer">✕</button>
+                <h4 class="font-bold text-slate-800 truncate pr-2">{{ item.name }}</h4>
+                <div class="flex justify-between text-[10px] text-slate-400">
+                  <span>⏱️{{ item.duration }}h</span>
+                  <button @click="locateOnMap(item.name)" class="text-emerald-600 hover:underline font-bold flex items-center cursor-pointer">🎯 定位</button>
+                </div>
+              </div>
+              <div v-if="wishlist.length === 0" class="text-xs text-amber-600/60 p-2 italic">池子空了，资产已被全数划入战术行军序列。</div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div v-for="(day, dIdx) in days" :key="dIdx" class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm space-y-3">
+              <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">📌 {{ day.name }} PLAN</h3>
+                <span class="text-xs text-slate-400 font-mono">结余: ¥{{ globalBudget - getDayCost(day) }}</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 text-center text-xs text-slate-400 font-semibold">
+                <div class="bg-slate-50 py-1 rounded">🌅 上午</div>
+                <div class="bg-slate-50 py-1 rounded">☀️ 下午</div>
+                <div class="bg-slate-50 py-1 rounded">🌙 晚上</div>
+              </div>
+
+              <div class="space-y-2">
+                <div v-for="(item, iIdx) in day.items" :key="iIdx" class="bg-emerald-50/30 border border-emerald-100/50 p-2.5 rounded-xl flex justify-between items-center text-xs hover:border-emerald-300 transition-all">
+                  <div class="truncate flex-1">
+                    <span class="font-bold text-slate-800">{{ item.name }}</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5">⏱️{{ item.duration }}h | ¥{{ item.cost }}</p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button @click="locateOnMap(item.name)" class="text-emerald-600 hover:text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-200 bg-white text-[10px] cursor-pointer">🎯 定位</button>
+                    <button @click="removeDayItem(dIdx, iIdx)" class="text-slate-300 hover:text-red-500 text-[11px] cursor-pointer">✕</button>
+                  </div>
+                </div>
                 
-                <div v-if="currentStage === 'landing'" key="landing" class="h-full w-full flex flex-col items-center justify-center relative px-6 bg-grid-green">
-                    <div class="absolute w-[500px] h-[500px] bg-[#D0EBB7]/40 blur-3xl rounded-full top-0 left-0 pointer-events-none"></div>
-                    <div class="absolute w-[450px] h-[450px] bg-pink-100/40 blur-3xl rounded-full bottom-0 right-0 pointer-events-none"></div>
-
-                    <div class="max-w-2xl text-center space-y-10 animate-fadeIn z-10">
-                        <div class="space-y-4">
-                            <div class="inline-flex items-center gap-1 px-3 py-0.5 bg-white text-emerald-800 border border-[#D0EBB7] rounded-full text-[10px] font-bold tracking-wider shadow-sm">
-                                🍃 MINT SYSTEM V6.5
-                            </div>
-                            <h1 class="text-5xl md:text-7xl font-bold text-center tracking-wide handwritten-brand py-2">
-                                A TRIP TO YOUR DREAM
-                            </h1>
-                            <p class="text-xs text-slate-500 max-w-xs mx-auto tracking-wide">请输入你的出征目的地与核心预算支配</p>
-                        </div>
-
-                        <div class="p-6 bg-white/95 border border-[#D0EBB7] shadow-xl rounded-2xl max-w-sm mx-auto space-y-4">
-                            <div class="space-y-3 text-left">
-                                <div>
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">🌍 设定目的地城市</label>
-                                    <input type="text" v-model="destination" placeholder="如：北京、上海、成都" class="w-full bg-slate-50 border border-slate-200 px-3 py-2 mt-1 rounded-xl text-xs font-medium focus:outline-none focus:border-[#D0EBB7]">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">💰 财务硬核总盘</label>
-                                    <input type="number" v-model.number="globalBudget" class="w-full bg-slate-50 border border-slate-200 px-3 py-2 mt-1 rounded-xl text-xs font-mono font-bold text-emerald-700 focus:outline-none focus:border-[#D0EBB7]">
-                                </div>
-                            </div>
-                            <button @click="currentStage = 'wishlist'" class="w-full py-3 bg-[#D0EBB7] hover:bg-[#c2e2a7] text-emerald-950 rounded-xl text-xs font-bold tracking-wide shadow-sm transition-all cursor-pointer">
-                                配置心愿资产与预算 →
-                            </button>
-                        </div>
-                    </div>
+                <div class="pt-1 flex gap-2">
+                  <select @change="moveWishToDay($event, dIdx)" class="text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-slate-600 outline-none w-full cursor-pointer">
+                    <option value="">＋ 将编排池资产调配至本旅程...</option>
+                    <option v-for="(item, idx) in wishlist" :value="idx" :key="idx">{{ item.name }}</option>
+                  </select>
                 </div>
+              </div>
 
-                <div v-else-if="currentStage === 'wishlist'" key="wishlist" class="h-full w-full flex flex-col bg-[#F7FDF3]">
-                    <header class="bg-white border-b border-[#D0EBB7]/60 px-4 md:px-6 py-3 flex items-center justify-between shadow-sm relative z-50">
-                        <button @click="currentStage = 'landing'" class="text-[11px] text-slate-400 hover:text-emerald-700 p-2 -ml-2">← 返回</button>
-                        <h1 class="text-2xl md:text-3xl font-bold text-center tracking-wide handwritten-brand flex-1">A TRIP TO YOUR DREAM</h1>
-                        <div class="text-[10px] md:text-xs font-bold bg-[#D0EBB7]/30 text-emerald-900 px-2 md:px-3 py-1 rounded-lg border border-[#D0EBB7]/40 truncate max-w-[80px] md:max-w-none">📍 {{ destination }}</div>
-                    </header>
+              <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-50 pt-2 font-mono">
+                <span>⌛ 饱和度: {{ getDayTotal(day) }}h / 12h</span>
+                <span>💰 耗费: ¥{{ getDayCost(day) }}</span>
+              </div>
+            </div>
+          </div>
 
-                    <div class="flex-1 overflow-hidden flex flex-col md:flex-row p-3 md:p-6 gap-4 bg-grid-green">
-                        <div class="w-full md:w-85 bg-white p-4 rounded-2xl border border-[#D0EBB7]/60 flex flex-col justify-between shadow-sm shrink-0 md:shrink">
-                            <div class="space-y-3 overflow-y-auto no-scrollbar">
-                                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">✍️ 记账与心愿录入</h3>
-                                <form @submit.prevent="addSpot" class="space-y-2">
-                                    <input type="text" v-model="newSpot.name" placeholder="想去的景点、宝藏餐厅..." required class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#D0EBB7]">
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <div class="flex gap-1 items-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-1.5">
-                                            <span class="text-[10px] text-slate-500 shrink-0">⏱️时长:</span>
-                                            <input type="number" v-model.number="newSpot.duration" min="0.5" step="0.5" required class="w-full text-xs font-mono bg-transparent text-right focus:outline-none">
-                                        </div>
-                                        <div class="flex gap-1 items-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-1.5">
-                                            <span class="text-[10px] text-slate-500 shrink-0">💰费用:</span>
-                                            <input type="number" v-model.number="newSpot.cost" min="0" step="1" required class="w-full text-xs font-mono bg-transparent text-right focus:outline-none">
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="w-full py-2 bg-[#D0EBB7] hover:bg-[#c2e2a7] text-emerald-950 text-xs font-bold rounded-xl cursor-pointer">塞入待编排库</button>
-                                </form>
-                            </div>
-                            
-                            <div class="pt-3 border-t border-slate-100 space-y-1.5 text-[11px] mt-2">
-                                <div class="flex justify-between text-slate-500"><span>已选资产项:</span><span class="font-bold text-slate-800">{{ wishlist.length }} 个</span></div>
-                                <div class="flex justify-between text-slate-500"><span>预算累计占用:</span><span class="font-mono font-bold text-emerald-800">¥ {{ wishlistTotalCost }}</span></div>
-                                <button @click="goToScheduleStage" :disabled="wishlist.length === 0" class="w-full py-2.5 mt-2 bg-slate-900 hover:bg-slate-800 text-white disabled:bg-slate-200 disabled:cursor-not-allowed rounded-xl font-bold tracking-wide transition-all text-xs cursor-pointer shadow-sm">
-                                    进入具体旅游安排 →
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="flex-1 bg-white p-4 rounded-2xl border border-[#D0EBB7]/60 flex flex-col overflow-hidden shadow-sm">
-                            <div class="shrink-0 pb-2 border-b border-slate-100">
-                                <h3 class="text-xs font-bold text-emerald-900 tracking-wider">✨ 针对 <b>{{ destination }}</b> 推荐打卡点</h3>
-                            </div>
-                            <div class="flex-1 overflow-y-auto no-scrollbar grid grid-cols-1 sm:grid-cols-2 gap-2 py-2">
-                                <div v-for="rec in currentRecommendations" :key="rec.name" @click="absorbRecommendation(rec)"
-                                     class="p-2.5 bg-[#F9FDF6] border border-[#D0EBB7]/40 rounded-xl hover:border-emerald-400 active:bg-emerald-50 transition-all cursor-pointer flex flex-col justify-between relative">
-                                    <span class="absolute top-2 right-2 text-emerald-600 text-[10px] font-bold">➕ 吸收</span>
-                                    <h4 class="text-[11px] font-bold text-slate-800 pr-8">{{ rec.name }}</h4>
-                                    <div class="mt-2 flex gap-3 text-[10px] font-mono text-slate-500">
-                                        <span>⏱️ {{ rec.duration }}h</span><span class="text-emerald-800 font-bold">¥{{ rec.cost }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-else-if="currentStage === 'schedule'" key="schedule" class="h-full w-full flex flex-col bg-[#F7FDF3]">
-                    
-                    <header class="bg-white border-b border-[#D0EBB7]/60 px-3 md:px-6 py-2 md:py-3 flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0 shadow-sm relative z-50">
-                        <div class="flex items-center justify-between w-full sm:w-auto border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                            <button @click="currentStage = 'wishlist'" class="text-xs text-slate-500 hover:text-emerald-700 font-bold px-2 py-1 -ml-2">← 返回补充</button>
-                            <h1 class="text-xl md:text-3xl font-bold tracking-wide handwritten-brand mx-auto sm:ml-4 sm:mr-8">A TRIP TO YOUR DREAM</h1>
-                        </div>
-                        <div class="flex items-center gap-2 w-full sm:w-auto justify-between overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-                            <div class="flex items-center gap-1 bg-[#D0EBB7]/20 border border-[#D0EBB7] px-2 py-1 rounded-lg text-[10px] font-mono shrink-0">
-                                <span class="font-bold text-emerald-900 uppercase">💰 预算总盘:</span>
-                                <input type="number" v-model.number="globalBudget" class="w-12 font-bold bg-transparent text-emerald-800 focus:outline-none text-center">元
-                            </div>
-                            <button @click="addDay" class="px-2 py-1 text-[10px] font-bold text-emerald-800 bg-white border border-[#D0EBB7] rounded-lg hover:bg-[#D0EBB7]/40 active:bg-[#D0EBB7] shrink-0 cursor-pointer">
-                                + 加天数
-                            </button>
-                            <button @click.stop="exportScheduleImage" class="px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600 rounded-lg active:bg-emerald-800 shadow-sm shrink-0 cursor-pointer">
-                                🖼️ 导出便利贴
-                            </button>
-                        </div>
-                    </header>
-
-                    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-                        
-                        <aside class="w-full lg:w-60 bg-white border-b lg:border-b-0 lg:border-r border-[#D0EBB7]/60 flex flex-col p-3 shrink-0 max-h-[22vh] lg:max-h-none overflow-hidden relative z-40"
-                               @dragover.prevent @drop="handleDrop('wishlist')" @click="handleZoneClick('wishlist', null, null, $event)">
-                            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex justify-between">
-                                <span>📦 待编排池</span>
-                                <span class="font-mono bg-slate-100 text-slate-600 px-1 rounded">{{ wishlist.length }}</span>
-                            </h3>
-                            <div class="flex-1 overflow-x-auto lg:overflow-y-auto no-scrollbar relative pt-1">
-                                <transition-group name="card" tag="div" class="flex flex-row lg:flex-col gap-2 pb-2">
-                                    <div v-for="item in wishlist" :key="item.id" draggable="true" 
-                                         @dragstart="handleDragStart(item, { type: 'wishlist' })"
-                                         class="w-36 lg:w-full shrink-0 bg-slate-50 p-2 rounded-xl border border-slate-200/60 transition-all cursor-grab relative flex flex-col justify-between"
-                                         :class="{'ring-2 ring-emerald-500 bg-emerald-50 shadow-md': draggedItem && draggedItem.id === item.id}">
-                                        <button @click.stop="deleteItem('wishlist', item.id)" class="absolute top-1 right-1 text-slate-300 active:text-rose-500 text-[10px] p-1">✕</button>
-                                        <h4 class="text-[11px] font-bold text-slate-800 truncate pr-3">{{ item.name }}</h4>
-                                        
-                                        <div class="mt-1 flex items-center justify-between font-mono text-[9px] text-slate-500">
-                                            <span>⏱️{{ item.duration }}h</span>
-                                            <button @click.stop="handleCardSelect(item, { type: 'wishlist' })" class="text-emerald-700 font-bold bg-white border border-emerald-100 px-1 rounded hover:bg-emerald-50">🎯 定位/点选</button>
-                                        </div>
-                                    </div>
-                                </transition-group>
-                            </div>
-                        </aside>
-
-                        <main class="flex-1 p-3 md:p-6 overflow-x-auto flex gap-4 items-start no-scrollbar bg-grid-green relative z-30 min-h-[30vh]">
-                            <div v-for="(day, dayIndex) in days" :key="day.id" class="w-64 md:w-76 bg-white border border-[#D0EBB7]/80 rounded-2xl shadow-sm flex flex-col max-h-full shrink-0">
-                                
-                                <div class="p-2.5 border-b border-slate-100 flex items-center justify-between bg-white rounded-t-2xl">
-                                    <h3 class="font-bold text-slate-900 eng-sub !text-emerald-800 !text-sm">{{ day.name }}</h3>
-                                    <div class="flex items-center gap-2">
-                                        <span :class="['text-[9px] px-1.5 py-0.5 rounded font-mono font-bold', getDayTotal(day) > 12 ? 'bg-rose-50 text-rose-600' : 'bg-[#D0EBB7]/20 text-emerald-900']">
-                                            {{ getDayTotal(day) }} / 12h
-                                        </span>
-                                        <button @click="removeDay(day.id)" class="text-slate-300 active:text-rose-500 text-xs px-1">✕</button>
-                                    </div>
-                                </div>
-
-                                <div class="p-2.5 overflow-y-auto space-y-3 no-scrollbar flex-1 bg-[#F7FDF3]/40">
-                                    <div v-for="slot in ['morning', 'afternoon', 'evening']" :key="slot" class="space-y-1">
-                                        <div class="text-[10px] font-bold text-slate-500 tracking-wider flex items-center gap-1">
-                                            <span v-if="slot === 'morning'">🌅 上午</span>
-                                            <span v-if="slot === 'afternoon'">☀️ 下午</span>
-                                            <span v-if="slot === 'evening'">🌙 晚上</span>
-                                        </div>
-
-                                        <div class="min-h-[70px] bg-white border border-slate-100 rounded-xl p-1.5 transition-all duration-300 relative cursor-pointer"
-                                             :class="{'border-emerald-400 bg-emerald-50/20 ring-2 ring-emerald-100': activeDropZone === `${day.id}-${slot}`}"
-                                             @dragover.prevent @dragenter.prevent="activeDropZone = `${day.id}-${slot}`" @dragleave="activeDropZone = null" 
-                                             @drop="handleDrop('day', day.id, slot)"
-                                             @click="handleZoneClick('day', day.id, slot, $event)">
-                                            
-                                            <div class="space-y-0 relative min-h-[50px]">
-                                                <div v-for="(item, itemIndex) in day.slots[slot]" :key="item.id" class="relative">
-                                                    
-                                                    <div draggable="true" 
-                                                         @dragstart="handleDragStart(item, { type: 'day', dayId: day.id, slot: slot })"
-                                                         class="group/card bg-slate-50 border border-slate-100 p-2 rounded-lg transition-all relative z-10"
-                                                         :class="{'ring-2 ring-emerald-500 bg-emerald-50 shadow-md': draggedItem && draggedItem.id === item.id}">
-                                                        <button @click.stop="deleteItem('day', item.id, day.id, slot)" class="absolute top-1 right-1 text-slate-300 active:text-rose-500 text-[10px] p-1">✕</button>
-                                                        <h4 class="text-[11px] font-bold text-slate-800 pr-4 line-clamp-1">{{ item.name }}</h4>
-                                                        
-                                                        <div class="mt-1 flex items-center justify-between text-[9px] font-mono text-slate-500">
-                                                            <div class="flex gap-1.5 items-center">
-                                                                <span>⏱️{{ item.duration }}h</span>
-                                                                <span class="text-emerald-700">¥{{ item.cost }}</span>
-                                                            </div>
-                                                            <button @click.stop="handleCardSelect(item, { type: 'day', dayId: day.id, slot: slot })" class="text-emerald-700 font-bold bg-white border border-emerald-100 px-1 rounded hover:bg-emerald-50">🎯 定位/点选</button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div v-if="itemIndex < day.slots[slot].length - 1" class="relative my-1.5 ml-3 pl-2 border-l-2 border-[#D0EBB7] flex items-center justify-between text-[9px]" @click.stop>
-                                                        <div class="absolute -left-[4px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                                                        <select v-model="item.transport.type" @change="updateTransport(item)" class="bg-white border border-slate-200 rounded px-1 py-0.5 text-[9px] text-slate-600 focus:outline-none">
-                                                            <option value="subway">🚇 地铁</option>
-                                                            <option value="taxi">🚖 打车</option>
-                                                            <option value="walk">跑 徒步</option>
-                                                        </select>
-                                                        <div class="font-mono text-slate-500 scale-90 origin-right"><span>{{ item.transport.duration }}h</span> | <span class="text-amber-700">¥{{ item.transport.cost }}</span></div>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="p-2 border-t border-slate-100 bg-white rounded-b-2xl text-[10px] space-y-0.5">
-                                    <div class="flex justify-between text-slate-500"><span>开销累计:</span><span class="font-mono font-bold">¥ {{ getDayCost(day) }}</span></div>
-                                    <div class="flex justify-between font-bold border-t border-dashed border-slate-100 pt-0.5">
-                                        <span>预算结余:</span>
-                                        <span :class="['font-mono', (globalBudget - getDayCost(day)) < 0 ? 'text-rose-600' : 'text-emerald-700']">¥ {{ globalBudget - getDayCost(day) }}</span>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </main>
-
-                        <section class="w-full lg:w-80 h-[380px] lg:h-full bg-white border-t lg:border-t-0 lg:border-l border-[#D0EBB7]/60 p-3 flex flex-col shrink-0 relative z-20">
-                            <div class="pb-1.5">
-                                <h3 class="text-[11px] font-bold text-emerald-900 tracking-wider flex items-center gap-1">🗺️ 战术行军真实动态图</h3>
-                            </div>
-                            <div id="map" class="flex-1 w-full rounded-2xl border border-slate-200 shadow-inner z-10 min-h-[320px] relative"></div>
-                        </section>
-
-                    </div>
-                </div>
-
-            </transition>
         </div>
-    </div>
 
-    <script>
-        const { createApp, ref, computed, nextTick, watch } = Vue;
+        <div class="lg:col-span-7 flex flex-col border-2 border-emerald-500/20 rounded-3xl overflow-hidden shadow-inner bg-slate-50 min-h-[400px] relative">
+          
+          <div class="bg-emerald-900 text-emerald-100 text-xs font-mono px-4 py-2.5 flex items-center justify-between z-[1000] border-b border-emerald-800">
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>LIVE_TACTICAL_MAP // 战术行军动态图</span>
+            </div>
+            <div id="hud-display" class="text-[11px] text-emerald-300">
+              RADAR_SCAN: STANDBY
+            </div>
+          </div>
 
-        createApp({
-            setup() {
-                const currentStage = ref('landing');
-                const destination = ref('北京');
-                const globalBudget = ref(1500);
+          <div id="map" class="w-full flex-1 z-10"></div>
+          
+        </div>
 
-                let mapInstance = null;
-                let markerGroup = null;
-                const mapMarkersCache = {};
+      </div>
+    </main>
 
-                const wishlist = ref([
-                    { id: 1, name: '北京南站大本营', duration: 1, cost: 0, transport: { type: 'subway', duration: 0.5, cost: 5 }, lat: 39.8652, lng: 116.3784 }
-                ]);
+    <footer class="text-center text-[11px] text-slate-400 font-medium border-t border-slate-100 pt-4 mt-6">
+      Generated by Mint Planner &copy; 2026 // OPENSTREETMAP REAL-TIME GEO推演终端
+    </footer>
 
-                // 真实坐标库
-                const recommendationDatabase = {
-                    '北京': [
-                        { name: '故宫博物院深度游', duration: 4.5, cost: 60, lat: 39.9163, lng: 116.3972 },
-                        { name: '什刹海夜景酒吧街', duration: 2, cost: 120, lat: 39.9385, lng: 116.3895 },
-                        { name: '颐和园皇家园林', duration: 3.5, cost: 30, lat: 39.9998, lng: 116.2755 },
-                        { name: '天坛公园祈年殿', duration: 2, cost: 28, lat: 39.8822, lng: 116.4111 }
-                    ],
-                    '上海': [
-                        { name: '外滩璀璨夜景漫步', duration: 1.5, cost: 0, lat: 31.2416, lng: 121.4894 },
-                        { name: '迪士尼全日打卡', duration: 8, cost: 475, lat: 31.1414, lng: 121.6619 },
-                        { name: '武康路历史名街闲逛', duration: 2, cost: 0, lat: 31.2051, lng: 121.4345 },
-                        { name: '东方明珠电视塔', duration: 2.5, cost: 199, lat: 31.2397, lng: 121.4997 }
-                    ],
-                    '成都': [
-                        { name: '大熊猫繁育基地看花花', duration: 4, cost: 55, lat: 30.7338, lng: 104.1438 },
-                        { name: '宽窄巷子川剧变脸', duration: 2, cost: 60, lat: 30.6634, lng: 104.0529 },
-                        { name: '锦里古镇品尝小吃', duration: 2, cost: 40, lat: 30.6481, lng: 104.0494 },
-                        { name: '春熙路IFS大熊猫合影', duration: 2, cost: 120, lat: 30.6559, lng: 104.0817 }
-                    ]
-                };
+  </div>
 
-                const cityCenterCoords = { '北京': [39.9042, 116.4074], '上海': [31.2304, 121.4737], '成都': [30.5728, 104.0668] };
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const { createApp, ref, computed, nextTick } = Vue;
 
-                const currentRecommendations = computed(() => {
-                    const city = destination.value ? destination.value.trim() : '';
-                    if (recommendationDatabase[city]) return recommendationDatabase[city];
-                    
-                    const base = cityCenterCoords[city] || [39.9042, 116.4074];
-                    return [
-                        { name: `${city}市中心首席打卡地`, duration: 2, cost: 0, lat: base[0] + 0.012, lng: base[1] + 0.008 },
-                        { name: `${city}本地传统风味老街`, duration: 1.5, cost: 45, lat: base[0] - 0.009, lng: base[1] - 0.015 },
-                        { name: `${city}深夜璀璨网红夜市`, duration: 2, cost: 50, lat: base[0] + 0.021, lng: base[1] - 0.023 }
-                    ];
-                });
+    createApp({
+      setup() {
+        const currentPage = ref(1);
+        const destination = ref('东京');
+        const globalBudget = ref(15000);
+        
+        const newItem = ref({ name: '', duration: '', cost: '' });
+        const wishlist = ref([
+          { name: '东京铁塔', duration: 1.5, cost: 120 },
+          { name: '浅草寺', duration: 2, cost: 0 },
+          { name: '秋叶原电器街', duration: 3, cost: 500 }
+        ]);
 
-                const wishlistTotalCost = computed(() => wishlist.value.reduce((sum, i) => sum + i.cost, 0));
+        const recommendations = ref([
+          { name: '明治神宫', duration: 2, cost: 0 },
+          { name: '新宿御苑', duration: 1.5, cost: 50 },
+          { name: '涩谷十字路口', duration: 1, cost: 0 },
+          { name: '东京迪士尼乐园', duration: 8, cost: 450 }
+        ]);
 
-                const days = ref([
-                    { id: 1, name: 'Day 1', slots: { morning: [], afternoon: [], evening: [] } },
-                    { id: 2, name: 'Day 2', slots: { morning: [], afternoon: [], evening: [] } }
-                ]);
+        const days = ref([
+          { name: 'DAY 01', items: [] },
+          { name: 'DAY 02', items: [] }
+        ]);
 
-                const newSpot = ref({ name: '', duration: 1, cost: 0 });
-                const draggedItem = ref(null);
-                const dragSource = ref(null);
-                const activeDropZone = ref(null);
+        // Leaflet 地图相关全局句柄
+        let mapInstance = null;
+        let activeMarker = null;
+        let tacticalLine = null;
+        let baseCityLatLng = [35.6762, 139.6503]; // 默认落脚点经纬度
 
-                const goToScheduleStage = () => {
-                    currentStage.value = 'schedule';
-                    nextTick(() => {
-                        setTimeout(() => {
-                            initMap();
-                            renderMapRoutes();
-                        }, 500); 
-                    });
-                };
+        const wishlistTotalCost = computed(() => {
+          return wishlist.value.reduce((sum, item) => sum + (item.cost || 0), 0);
+        });
 
-                const initMap = () => {
-                    const mapDom = document.getElementById('map');
-                    if (!mapDom) return;
-                    
-                    if (!mapInstance) {
-                        const center = cityCenterCoords[destination.value.trim()] || [39.9042, 116.4074];
-                        // 强制隔离移动端拖拽补丁的影响
-                        mapDom.addEventListener('touchstart', e => e.stopPropagation(), {passive: true});
-                        mapDom.addEventListener('touchmove', e => e.stopPropagation(), {passive: true});
-                        mapDom.addEventListener('touchend', e => e.stopPropagation(), {passive: true});
+        // ==================== 页面控制与逻辑方法 ====================
+        function goToPage2() {
+          if (!destination.value.trim()) {
+            alert('请先设定目的地城市大本营！');
+            return;
+          }
+          currentPage.value = 2;
+        }
 
-                        mapInstance = L.map('map', { zoomControl: false }).setView(center, 12);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
-                        markerGroup = L.layerGroup().addTo(mapInstance);
-                    }
-                    mapInstance.invalidateSize(); 
-                };
+        function goToPage3() {
+          currentPage.value = 3;
+          // 确保在页面渲染完毕后，加载并调整地图
+          nextTick(() => {
+            initTacticalMap();
+          });
+        }
 
-                const renderMapRoutes = () => {
-                    if (!mapInstance || !markerGroup) return;
-                    markerGroup.clearLayers();
-                    for (let key in mapMarkersCache) delete mapMarkersCache[key];
+        function addToWishlist() {
+          if (!newItem.value.name.trim()) return;
+          wishlist.value.push({
+            name: newItem.value.name,
+            duration: newItem.value.duration || 1,
+            cost: newItem.value.cost || 0
+          });
+          newItem.value = { name: '', duration: '', cost: '' };
+        }
 
-                    const center = cityCenterCoords[destination.value.trim()] || [39.9042, 116.4074];
-                    const latlngs = [];
+        function absorbRecommendation(rec) {
+          wishlist.value.push({ ...rec });
+        }
 
-                    L.marker(center, {
-                        icon: L.divIcon({
-                            html: '<div class="bg-[#D0EBB7] text-emerald-950 font-bold text-[10px] px-2 py-0.5 rounded-md border border-white shadow-md whitespace-nowrap">🌍 '+destination.value+'大本营</div>',
-                            className: 'custom-city-icon', iconSize: [60, 20]
-                        })
-                    }).addTo(markerGroup);
+        function removeWishItem(idx) {
+          wishlist.value.splice(idx, 1);
+        }
 
-                    ['morning', 'afternoon', 'evening'].forEach(slot => {
-                        days.value.forEach(day => {
-                            if (day.slots && day.slots[slot]) {
-                                day.slots[slot].forEach(item => {
-                                    if (item.lat && item.lng) {
-                                        latlngs.push([item.lat, item.lng]);
-                                        const marker = L.marker([item.lat, item.lng], {
-                                            icon: L.divIcon({
-                                                html: `<div id="marker-node-${item.id}" class="w-3.5 h-3.5 rounded-full bg-emerald-600 border border-white shadow-sm transition-all duration-300"></div>`,
-                                                className: 'node-icon-wrapper', iconSize: [14, 14]
-                                            })
-                                        }).addTo(markerGroup).bindPopup(`<div class="font-sans text-xs p-0.5"><b>✨ ${item.name}</b></div>`);
-                                        mapMarkersCache[item.id] = marker;
-                                    }
-                                });
-                            }
-                        });
-                    });
+        function addDay() {
+          days.value.push({
+            name: `DAY 0${days.value.length + 1}`,
+            items: []
+          });
+        }
 
-                    if (latlngs.length > 0) {
-                        L.polyline(latlngs, { color: '#047857', weight: 4, dashArray: '6, 8', opacity: 0.85 }).addTo(markerGroup);
-                        mapInstance.fitBounds(L.latLngBounds([...latlngs, center]), { padding: [40, 40] });
-                    } else {
-                        mapInstance.setView(center, 12);
-                    }
-                    setTimeout(() => { mapInstance.invalidateSize(); }, 200);
-                };
+        function moveWishToDay(event, dayIdx) {
+          const wishIdx = event.target.value;
+          if (wishIdx === "") return;
+          
+          const item = wishlist.value[wishIdx];
+          days.value[dayIdx].items.push(item);
+          wishlist.value.splice(wishIdx, 1);
+          event.target.value = ""; // 重置选择框
 
-                // 点击卡片，真实定位并高亮地图
-                watch(draggedItem, (newItem) => {
-                    if (newItem && mapMarkersCache[newItem.id] && mapInstance) {
-                        const marker = mapMarkersCache[newItem.id];
-                        mapInstance.setView(marker.getLatLng(), 14, { animate: true, duration: 0.6 });
-                        marker.openPopup();
-                        nextTick(() => {
-                            const node = document.getElementById(`marker-node-${newItem.id}`);
-                            if (node) node.classList.add('map-pulse-highlight');
-                        });
-                    } else {
-                        nextTick(() => {
-                            document.querySelectorAll('.node-icon-wrapper div').forEach(el => el.classList.remove('map-pulse-highlight'));
-                        });
-                    }
-                });
+          // 自动触发新划入点的战术高亮
+          locateOnMap(item.name);
+        }
 
-                // 完美解决手机端跨域白屏截图的Z轴隐藏提取法
-                const exportScheduleImage = () => {
-                    window.scrollTo(0, 0); 
-                    const hiddenTarget = document.getElementById('hidden-snapshot-board');
-                    if (!hiddenTarget) return;
+        function removeDayItem(dayIdx, itemIdx) {
+          const item = days.value[dayIdx].items[itemIdx];
+          wishlist.value.push(item);
+          days.value[dayIdx].items.splice(itemIdx, 1);
+        }
 
-                    html2canvas(hiddenTarget, {
-                        useCORS: true,
-                        scale: window.devicePixelRatio || 2,
-                        backgroundColor: '#F7FDF3',
-                        logging: false,
-                        windowWidth: 480 
-                    }).then(canvas => {
-                        const link = document.createElement('a');
-                        link.download = `特种兵旅程手账-${destination.value}.png`;
-                        link.href = canvas.toDataURL('image/png');
-                        link.click();
-                    }).catch(err => {
-                        alert('手机端截图生成受限，请稍后重试');
-                    });
-                };
+        function getDayCost(day) {
+          return day.items.reduce((sum, item) => sum + (item.cost || 0), 0);
+        }
 
-                const absorbRecommendation = (rec) => {
-                    const base = cityCenterCoords[destination.value.trim()] || [39.9042, 116.4074];
-                    wishlist.value.push({
-                        id: Date.now() + Math.random(),
-                        name: rec.name, duration: rec.duration, cost: rec.cost,
-                        lat: rec.lat || base[0] + (Math.random() - 0.5) * 0.05, 
-                        lng: rec.lng || base[1] + (Math.random() - 0.5) * 0.05,
-                        transport: { type: 'subway', duration: 0.5, cost: 5 }
-                    });
-                };
+        var getDayTotal = function(day) {
+          return day.items.reduce((sum, item) => sum + (item.duration || 0), 0);
+        }
 
-                const addSpot = () => {
-                    if (!newSpot.value.name) return;
-                    const base = cityCenterCoords[destination.value.trim()] || [39.9042, 116.4074];
-                    wishlist.value.push({
-                        id: Date.now(), name: newSpot.value.name, duration: Number(newSpot.value.duration) || 1, cost: Number(newSpot.value.cost) || 0,
-                        lat: base[0] + (Math.random() - 0.5) * 0.06, lng: base[1] + (Math.random() - 0.5) * 0.06,
-                        transport: { type: 'subway', duration: 0.5, cost: 5 }
-                    });
-                    newSpot.value.name = ''; newSpot.value.duration = 1; newSpot.value.cost = 0;
-                };
+        // ==================== 🗺️ 免费地图核心对接逻辑 ====================
+        
+        // 1. 初始化地图并根据城市调动至中心点
+        async function initTacticalMap() {
+          // 如果实例已存在，先彻底销毁防冲突
+          if (mapInstance) {
+            mapInstance.remove();
+            mapInstance = null;
+          }
 
-                const updateTransport = (item) => {
-                    if (item.transport.type === 'subway') { item.transport.duration = 0.5; item.transport.cost = 5; }
-                    else if (item.transport.type === 'taxi') { item.transport.duration = 0.3; item.transport.cost = 35; }
-                    else if (item.transport.type === 'walk') { item.transport.duration = 0.8; item.transport.cost = 0; }
-                };
+          const hud = document.getElementById('hud-display');
+          if (hud) hud.innerHTML = `STATUS: SEARCHING_BASE_CITY...`;
 
-                const addDay = () => {
-                    const newDayId = days.value.length ? Math.max(...days.value.map(d => d.id)) + 1 : 1;
-                    days.value.push({ id: newDayId, name: `Day ${days.value.length + 1}`, slots: { morning: [], afternoon: [], evening: [] } });
-                };
+          try {
+            // 使用 OpenStreetMap Nominatim 接口免费查询用户输入的城市大本营
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination.value)}`);
+            const data = await response.json();
 
-                const removeDay = (dayId) => {
-                    const day = days.value.find(d => d.id === dayId);
-                    if (day) { ['morning', 'afternoon', 'evening'].forEach(slot => { wishlist.value.push(...day.slots[slot]); }); }
-                    days.value = days.value.filter(d => d.id !== dayId);
-                    days.value.forEach((d, index) => { d.name = `Day ${index + 1}`; });
-                    renderMapRoutes();
-                };
-
-                const deleteItem = (type, itemId, dayId = null, slot = null) => {
-                    if (type === 'wishlist') { wishlist.value = wishlist.value.filter(i => i.id !== itemId); }
-                    else {
-                        const day = days.value.find(d => d.id === dayId);
-                        if (day) { day.slots[slot] = day.slots[slot].filter(i => i.id !== itemId); }
-                    }
-                    renderMapRoutes();
-                };
-
-                // 手机专属：点击代替拖拽
-                const handleCardSelect = (item, source) => {
-                    if (draggedItem.value && draggedItem.value.id === item.id) { draggedItem.value = null; dragSource.value = null; } 
-                    else { draggedItem.value = item; dragSource.value = source; }
-                };
-
-                const handleZoneClick = (targetType, dayId = null, slot = null, event) => {
-                    if (event && (event.target.closest('button') || event.target.closest('select'))) return;
-                    if (draggedItem.value) {
-                        if (dragSource.value.type === targetType && (targetType === 'wishlist' || (dragSource.value.dayId === dayId && dragSource.value.slot === slot))) {
-                            draggedItem.value = null; dragSource.value = null; return;
-                        }
-                        handleDrop(targetType, dayId, slot);
-                    }
-                };
-
-                const handleDragStart = (item, source) => { draggedItem.value = item; dragSource.value = source; };
-
-                const handleDrop = (targetType, dayId = null, slot = null) => {
-                    if (!draggedItem.value) return;
-                    const cloned = { ...draggedItem.value }; 
-                    if (dragSource.value.type === 'wishlist') { wishlist.value = wishlist.value.filter(i => i.id !== draggedItem.value.id); }
-                    else if (dragSource.value.type === 'day') {
-                        const srcDay = days.value.find(d => d.id === dragSource.value.dayId);
-                        if (srcDay) srcDay.slots[dragSource.value.slot] = srcDay.slots[dragSource.value.slot].filter(i => i.id !== draggedItem.value.id);
-                    }
-                    if (targetType === 'wishlist') { wishlist.value.push(cloned); }
-                    else if (targetType === 'day') { const tgtDay = days.value.find(d => d.id === dayId); if (tgtDay) tgtDay.slots[slot].push(cloned); }
-                    
-                    draggedItem.value = null; dragSource.value = null; activeDropZone.value = null;
-                    renderMapRoutes();
-                };
-
-                const getSlotTotal = (day, slot) => {
-                    let total = 0; const items = day.slots[slot] || [];
-                    items.forEach((item, index) => { total += item.duration; if (index < items.length - 1) total += item.transport.duration; });
-                    return parseFloat(total.toFixed(1));
-                };
-
-                const getDayTotal = (day) => {
-                    let total = 0; ['morning', 'afternoon', 'evening'].forEach(slot => { total += getSlotTotal(day, slot); });
-                    return parseFloat(total.toFixed(1));
-                };
-
-                const getDayCost = (day) => {
-                    let total = 0;
-                    ['morning', 'afternoon', 'evening'].forEach(slot => {
-                        const items = day.slots[slot] || [];
-                        items.forEach((item, index) => { total += (item.cost || 0); if (index < items.length - 1) total += (item.transport.cost || 0); });
-                    });
-                    return total;
-                };
-
-                return {
-                    currentStage, destination, globalBudget, wishlist, currentRecommendations, wishlistTotalCost, days, newSpot, activeDropZone, draggedItem,
-                    goToScheduleStage, exportScheduleImage, absorbRecommendation, addSpot, updateTransport, addDay, removeDay, deleteItem, handleDragStart, handleDrop, getSlotTotal, getDayTotal, getDayCost, handleCardSelect, handleZoneClick
-                };
+            if (data && data.length > 0) {
+              baseCityLatLng = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
             }
-        }).mount('#app');
-    </script>
+          } catch (e) {
+            console.error("城市基准定位失败，启用默认坐标", e);
+          }
+
+          // 初始化挂载地图（隐去+-号以保持极简薄荷科技UI）
+          mapInstance = L.map('map', { zoomControl: false }).setView(baseCityLatLng, 12);
+
+          // 加载免费且色调高度统一的明亮/清新风格 OSM 卡片底图 (CartoDB Positron)
+          // 该底图是清爽淡雅的灰白色系，完美融合你的 Mint 浅绿主色调
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+          }).addTo(mapInstance);
+
+          // 监听地图拖拽，实时反馈经纬度系统状态（电影感）
+          mapInstance.on('move', () => {
+            const center = mapInstance.getCenter();
+            if (hud) {
+              hud.innerHTML = `LAT: ${center.lat.toFixed(4)} | LNG: ${center.lng.toFixed(4)} | ZM: ${mapInstance.getZoom()}`;
+            }
+          });
+
+          if (hud) hud.innerHTML = `SYSTEM: BASE_CITY_LOCKED`;
+        }
+
+        // 2. 核心战术功能：根据卡片位置，进行全局搜索并在地图上高亮脉冲打点
+        async function locateOnMap(locationName) {
+          if (!mapInstance) return;
+          const hud = document.getElementById('hud-display');
+          
+          // 智能组合查询串：当前城市 + 具体地点，极大提升搜索准确率
+          const fullQuery = `${destination.value} ${locationName}`;
+          if (hud) hud.innerHTML = `SCANNING: ${locationName.toUpperCase()}...`;
+
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+              const lat = parseFloat(data[0].lat);
+              const lon = parseFloat(data[0].lon);
+              const targetLatLng = [lat, lon];
+
+              // 清理上一轮的连线和标记
+              if (activeMarker) mapInstance.removeLayer(activeMarker);
+              if (tacticalLine) mapInstance.removeLayer(tacticalLine);
+
+              // 构造契合 Mint 系统的自定义战术绿脉冲 DomIcon
+              const radarIcon = L.divIcon({
+                className: 'tactical-ping',
+                html: '<div class="ping-ring"></div><div class="ping-center"></div>',
+                iconSize: [32, 32]
+              });
+
+              // 在地图打下锁定桩并自动张开浮框
+              activeMarker = L.marker(targetLatLng, { icon: radarIcon }).addTo(mapInstance)
+                .bindPopup(`<div class="font-sans text-xs"><b class="text-emerald-600">🎯 [ 目标行军点锁定 ]</b><br><span class="font-bold text-slate-800">${locationName}</span><br><span class="text-[10px] text-slate-400">坐标: ${lat.toFixed(4)}, ${lon.toFixed(4)}</span></div>`)
+                .openPopup();
+
+              // 生成一条从大本营城市中心到该卡片地点的特种兵虚线导引线
+              tacticalLine = L.polyline([baseCityLatLng, targetLatLng], {
+                color: '#10b981', // 完美对接主调薄荷绿
+                weight: 2,
+                dashArray: '6, 8', 
+                opacity: 0.8
+              }).addTo(mapInstance);
+
+              // 优雅丝滑地飞向高亮卡片锚点 (高空俯瞰视角)
+              mapInstance.flyTo(targetLatLng, 15, {
+                animate: true,
+                duration: 1.5
+              });
+
+            } else {
+              alert(`未能在全球GPS库中锁定 "${locationName}"，请尝试补充写得更通用些。`);
+              if (hud) hud.innerHTML = `STATUS: LOCK_FAILED`;
+            }
+          } catch (err) {
+            console.error("行军打点解析失败", err);
+          }
+        }
+
+        return {
+          currentPage,
+          destination,
+          globalBudget,
+          newItem,
+          wishlist,
+          recommendations,
+          days,
+          wishlistTotalCost,
+          goToPage2,
+          goToPage3,
+          addToWishlist,
+          absorbRecommendation,
+          removeWishItem,
+          addDay,
+          moveWishToDay,
+          removeDayItem,
+          getDayCost,
+          getDayTotal,
+          locateOnMap
+        };
+      }
+    }).mount('#app');
+  </script>
 </body>
 </html>
