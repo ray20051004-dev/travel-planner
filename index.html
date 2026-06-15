@@ -16,6 +16,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=M+PLUS+Rounded+1c:wght@500;700&family=Fredoka:wght@600&display=swap" rel="stylesheet">
     
     <style>
+        /* 避免 Vue 模板闪烁 */
+        [v-cloak] { display: none; }
+
         /* 全站强制中文字体应用为高级圆体 */
         body, input, button, select, textarea {
             font-family: 'M PLUS Rounded 1c', 'Microsoft YaHei', sans-serif !important;
@@ -77,10 +80,10 @@
 
                 <div class="max-w-2xl text-center space-y-10 animate-fadeIn z-10">
                     <div class="space-y-4">
-                        <div class="inline-flex items-center gap-1 px-3 py-0.5 bg-white text-emerald-800 border border-[#D0EBB7] rounded-full text-[10px] font-bold tracking-wider shadow-2xs">
+                        <div class="inline-flex items-center gap-1 px-3 py-0.5 bg-white text-emerald-800 border border-[#D0EBB7] rounded-full text-[10px] font-bold tracking-wider shadow-sm">
                             🍃 MINT SYSTEM V4.8
                         </div>
-                        <h1 class="text-5xl md:text-7xl font-bold text-center tracking-wide handwritten-brand py-2 drop-shadow-2xs">
+                        <h1 class="text-5xl md:text-7xl font-bold text-center tracking-wide handwritten-brand py-2">
                             A TRIP TO YOUR DREAM
                         </h1>
                         <p class="text-xs text-slate-400 max-w-xs mx-auto tracking-wide">请输入你的出征目的地与核心预算支配</p>
@@ -97,7 +100,7 @@
                                 <input type="number" v-model.number="globalBudget" class="w-full bg-slate-50 border border-slate-200 px-3 py-2 mt-1 rounded-xl text-xs font-mono font-bold text-emerald-700 focus:outline-none focus:border-[#D0EBB7]">
                             </div>
                         </div>
-                        <button @click="currentStage = 'wishlist'" class="w-full py-3 bg-[#D0EBB7] hover:bg-[#c2e2a7] text-emerald-950 rounded-xl text-xs font-bold tracking-wide shadow-xs transition-all cursor-pointer">
+                        <button @click="currentStage = 'wishlist'" class="w-full py-3 bg-[#D0EBB7] hover:bg-[#c2e2a7] text-emerald-950 rounded-xl text-xs font-bold tracking-wide shadow-sm transition-all duration-200 cursor-pointer">
                             配置心愿资产与预算 →
                         </button>
                     </div>
@@ -105,14 +108,14 @@
             </div>
 
             <div v-else-if="currentStage === 'wishlist'" key="wishlist" class="h-full w-full flex flex-col bg-[#F7FDF3]">
-                <header class="bg-white border-b border-[#D0EBB7]/60 px-6 py-3 flex items-center justify-between shadow-2xs">
+                <header class="bg-white border-b border-[#D0EBB7]/60 px-6 py-3 flex items-center justify-between shadow-sm">
                     <button @click="currentStage = 'landing'" class="text-xs text-slate-400 hover:text-emerald-700">← 返回重置</button>
                     <h1 class="text-3xl font-bold text-center tracking-wide handwritten-brand">A TRIP TO YOUR DREAM</h1>
                     <div class="text-xs font-bold bg-[#D0EBB7]/30 text-emerald-900 px-3 py-1 rounded-lg border border-[#D0EBB7]/40">📍 城市: {{ destination }}</div>
                 </header>
 
                 <div class="flex-1 overflow-hidden flex flex-col md:flex-row p-4 md:p-6 gap-5 bg-grid-green">
-                    <div class="w-full md:w-85 bg-white p-4 rounded-2xl border border-[#D0EBB7]/60 flex flex-col justify-between shadow-xs">
+                    <div class="w-full md:w-85 bg-white p-4 rounded-2xl border border-[#D0EBB7]/60 flex flex-col justify-between shadow-sm">
                         <div class="space-y-3 overflow-y-auto no-scrollbar">
                             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">✍️ 记账与心愿录入</h3>
                             <form @submit.prevent="addSpot" class="space-y-2">
@@ -163,7 +166,7 @@
                         
                         <div class="flex-1 overflow-y-auto no-scrollbar grid grid-cols-1 sm:grid-cols-2 gap-3 py-3">
                             <div v-for="rec in currentRecommendations" :key="rec.name" @click="absorbRecommendation(rec)"
-                                 class="p-3 bg-[#F9FDF6] border border-[#D0EBB7]/40 rounded-xl hover:border-emerald-400 hover:bg-white hover:shadow-2xs transition-all cursor-pointer flex flex-col justify-between group relative">
+                                 class="p-3 bg-[#F9FDF6] border border-[#D0EBB7]/40 rounded-xl hover:border-emerald-400 hover:bg-white hover:shadow-sm transition-all cursor-pointer flex flex-col justify-between group relative">
                                 <span class="absolute top-2 right-2 text-emerald-600 text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">➕ 吸收</span>
                                 <div>
                                     <h4 class="text-xs font-bold text-slate-800">{{ rec.name }}</h4>
@@ -209,15 +212,18 @@
                 <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
                     
                     <aside class="w-full lg:w-64 bg-white border-b lg:border-b-0 lg:border-r border-[#D0EBB7]/60 flex flex-col p-4 shrink-0 max-h-[22vh] lg:max-h-none overflow-hidden"
-                           @dragover.prevent @drop="handleDrop('wishlist')">
+                           @dragover.prevent @drop="handleDrop('wishlist')" @click="handleZoneClick('wishlist', null, null, $event)">
                         <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex justify-between">
-                            <span>📦 待编排资产池</span>
+                            <span>📦 待编排资产池 (支持点击互投)</span>
                             <span class="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded text-[9px]">{{ wishlist.length }}</span>
                         </h3>
                         <div class="flex-1 overflow-x-auto lg:overflow-y-auto no-scrollbar relative">
                             <transition-group name="card" tag="div" class="flex flex-row lg:flex-col gap-2 pb-2">
-                                <div v-for="item in wishlist" :key="item.id" draggable="true" @dragstart="handleDragStart(item, { type: 'wishlist' })"
-                                     class="w-40 lg:w-full shrink-0 bg-slate-50 p-2 rounded-xl border border-slate-200/60 hover:border-emerald-300 hover:bg-white transition-all cursor-grab active:cursor-grabbing relative flex flex-col justify-between">
+                                <div v-for="item in wishlist" :key="item.id" draggable="true" 
+                                     @dragstart="handleDragStart(item, { type: 'wishlist' })"
+                                     @click.stop="handleCardSelect(item, { type: 'wishlist' })"
+                                     class="w-40 lg:w-full shrink-0 bg-slate-50 p-2 rounded-xl border border-slate-200/60 hover:border-emerald-300 hover:bg-white transition-all cursor-pointer relative flex flex-col justify-between"
+                                     :class="{'ring-3 ring-emerald-500 scale-[1.02] bg-emerald-50/50 shadow-md': draggedItem && draggedItem.id === item.id}">
                                     <button @click.stop="deleteItem('wishlist', item.id)" class="absolute top-1.5 right-1.5 text-slate-300 hover:text-rose-500 text-[10px]">✕</button>
                                     <div>
                                         <h4 class="text-xs font-bold text-slate-800 truncate lg:whitespace-normal">{{ item.name }}</h4>
@@ -233,7 +239,7 @@
                     </aside>
 
                     <main id="canvas-target" class="flex-1 p-4 md:p-6 overflow-x-auto flex gap-5 items-start no-scrollbar bg-grid-green">
-                        <div v-for="(day, dayIndex) in days" :key="day.id" class="w-72 md:w-76 bg-white border border-[#D0EBB7]/80 rounded-2xl shadow-xs flex flex-col max-h-full shrink-0">
+                        <div v-for="(day, dayIndex) in days" :key="day.id" class="w-72 md:w-76 bg-white border border-[#D0EBB7]/80 rounded-2xl shadow-sm flex flex-col max-h-full shrink-0">
                             
                             <div class="p-3 border-b border-slate-100 flex items-center justify-between bg-white rounded-t-2xl">
                                 <div>
@@ -254,14 +260,20 @@
                                         <span class="text-[9px] font-normal font-mono">({{ getSlotTotal(day, slot) }}h)</span>
                                     </div>
 
-                                    <div class="min-h-[85px] bg-white border border-slate-100 rounded-xl p-2 transition-all duration-300 relative"
+                                    <div class="min-h-[85px] bg-white border border-slate-100 rounded-xl p-2 transition-all duration-300 relative cursor-pointer"
                                          :class="{'border-emerald-400 bg-emerald-50/20 ring-2 ring-emerald-100': activeDropZone === `${day.id}-${slot}`}"
-                                         @dragover.prevent @dragenter.prevent="activeDropZone = `${day.id}-${slot}`" @dragleave="activeDropZone = null" @drop="handleDrop('day', day.id, slot)">
+                                         @dragover.prevent @dragenter.prevent="activeDropZone = `${day.id}-${slot}`" @dragleave="activeDropZone = null" 
+                                         @drop="handleDrop('day', day.id, slot)"
+                                         @click="handleZoneClick('day', day.id, slot, $event)">
                                         
                                         <div class="space-y-0 relative min-h-[65px]">
                                             <div v-for="(item, itemIndex) in day.slots[slot]" :key="item.id" class="relative">
                                                 
-                                                <div class="group/card bg-slate-50 border border-slate-100 p-2.5 rounded-lg hover:shadow-2xs transition-all cursor-grab active:cursor-grabbing relative z-10">
+                                                <div draggable="true" 
+                                                     @dragstart="handleDragStart(item, { type: 'day', dayId: day.id, slot: slot })"
+                                                     @click.stop="handleCardSelect(item, { type: 'day', dayId: day.id, slot: slot })"
+                                                     class="group/card bg-slate-50 border border-slate-100 p-2.5 rounded-lg hover:shadow-2xs transition-all relative z-10"
+                                                     :class="{'ring-3 ring-emerald-500 scale-[1.02] bg-emerald-50/50 shadow-md': draggedItem && draggedItem.id === item.id}">
                                                     <button @click.stop="deleteItem('day', item.id, day.id, slot)" class="absolute top-1.5 right-1.5 text-slate-300 hover:text-rose-500 text-[9px]">✕</button>
                                                     <h4 class="text-xs font-bold text-slate-800 pr-3 line-clamp-1" :class="{'text-emerald-700': item.isPlanBActive}">{{ item.name }}</h4>
                                                     
@@ -276,7 +288,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div v-if="itemIndex < day.slots[slot].length - 1" class="relative my-2 ml-4 pl-3 border-l-2 border-[#D0EBB7] flex items-center justify-between text-[10px]">
+                                                <div v-if="itemIndex < day.slots[slot].length - 1" class="relative my-2 ml-4 pl-3 border-l-2 border-[#D0EBB7] flex items-center justify-between text-[10px]" @click.stop>
                                                     <div class="absolute -left-[4px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400 border border-white"></div>
                                                     <select v-model="item.transport.type" @change="updateTransport(item)" class="bg-white border border-slate-200 rounded px-1 py-0.5 text-[9px] text-slate-600 focus:outline-none font-medium">
                                                         <option value="subway">🚇 地铁系统</option>
@@ -357,7 +369,7 @@
                 const cityCenterCoords = { '北京': [39.9042, 116.4074], '上海': [31.2304, 121.4737], '成都': [30.5728, 104.0668] };
 
                 const currentRecommendations = computed(() => {
-                    const city = destination.value.trim();
+                    const city = destination.value ? destination.value.trim() : '';
                     return recommendationDatabase[city] || [
                         { name: `${city}本地核心地标探索`, duration: 2, cost: 0, latOffset: 0.01, lngOffset: 0.01 },
                         { name: `${city}大众点评高分老街区`, duration: 1.5, cost: 40, latOffset: -0.01, lngOffset: 0.02 },
@@ -373,6 +385,8 @@
                 ]);
 
                 const newSpot = ref({ name: '', duration: 1, cost: 0, showPlanB: false, bName: '', bDuration: 1, bCost: 0 });
+                
+                // 全局选中共享槽（拖拽、点击共用此核心指针）
                 const draggedItem = ref(null);
                 const dragSource = ref(null);
                 const activeDropZone = ref(null);
@@ -502,15 +516,51 @@
                     renderMapRoutes();
                 };
 
-                const handleDragStart = (item, source) => { draggedItem.value = item; dragSource.value = source; };
+                // 【新增：手机端点选兼容逻辑】轻触/点击卡片触发选择
+                const handleCardSelect = (item, source) => {
+                    if (draggedItem.value && draggedItem.value.id === item.id) {
+                        // 如果点的是同一个，取消选中状态
+                        draggedItem.value = null;
+                        dragSource.value = null;
+                    } else {
+                        // 激活选择
+                        draggedItem.value = item;
+                        dragSource.value = source;
+                    }
+                };
+
+                // 【新增：手机端点击投放槽逻辑】
+                const handleZoneClick = (targetType, dayId = null, slot = null, event) => {
+                    // 如果点的是卡片里的各种按钮（如删除、PlanB切换），直接跳过防误触
+                    if (event && event.target.closest('button') || event && event.target.closest('select')) return;
+                    
+                    if (draggedItem.value) {
+                        // 如果互投的是相同地方，则自动转为解除选中状态
+                        if (dragSource.value.type === targetType && 
+                            (targetType === 'wishlist' || (dragSource.value.dayId === dayId && dragSource.value.slot === slot))) {
+                            draggedItem.value = null;
+                            dragSource.value = null;
+                            return;
+                        }
+                        handleDrop(targetType, dayId, slot);
+                    }
+                };
+
+                // 统一标准底层拖动核心派发器
+                const handleDragStart = (item, source) => {
+                    draggedItem.value = item;
+                    dragSource.value = source;
+                };
 
                 const handleDrop = (targetType, dayId = null, slot = null) => {
+                    if (!draggedItem.value) return;
+
                     if (dragSource.value && dragSource.value.type === 'recommendation') {
                         const rec = draggedItem.value;
                         const cloned = { id: Date.now() + Math.random(), name: rec.name, duration: rec.duration, cost: rec.cost, isPlanBActive: false, planB: rec.planB ? { ...rec.planB } : null, latOffset: rec.latOffset, lngOffset: rec.lngOffset, transport: { type: 'subway', duration: 0.5, cost: 5 } };
                         if (targetType === 'wishlist') wishlist.value.push(cloned);
                         else if (targetType === 'day') { const tgtDay = days.value.find(d => d.id === dayId); if (tgtDay) tgtDay.slots[slot].push(cloned); }
-                    } else if (draggedItem.value) {
+                    } else {
                         if (dragSource.value.type === 'wishlist') { wishlist.value = wishlist.value.filter(i => i.id !== draggedItem.value.id); }
                         else if (dragSource.value.type === 'day') {
                             const srcDay = days.value.find(d => d.id === dragSource.value.dayId);
@@ -519,12 +569,16 @@
                         if (targetType === 'wishlist') { wishlist.value.push(draggedItem.value); }
                         else if (targetType === 'day') { const tgtDay = days.value.find(d => d.id === dayId); if (tgtDay) tgtDay.slots[slot].push(draggedItem.value); }
                     }
-                    draggedItem.value = null; dragSource.value = null; activeDropZone.value = null;
+                    
+                    // 统一清空状态机变量
+                    draggedItem.value = null; 
+                    dragSource.value = null; 
+                    activeDropZone.value = null;
                     renderMapRoutes();
                 };
 
                 const getSlotTotal = (day, slot) => {
-                    let total = 0; const items = day.slots[slot];
+                    let total = 0; const items = day.slots[slot] || [];
                     items.forEach((item, index) => { total += item.duration; if (index < items.length - 1) total += item.transport.duration; });
                     return parseFloat(total.toFixed(1));
                 };
@@ -537,15 +591,15 @@
                 const getDayCost = (day) => {
                     let total = 0;
                     ['morning', 'afternoon', 'evening'].forEach(slot => {
-                        const items = day.slots[slot];
+                        const items = day.slots[slot] || [];
                         items.forEach((item, index) => { total += (item.cost || 0); if (index < items.length - 1) total += (item.transport.cost || 0); });
                     });
                     return total;
                 };
 
                 return {
-                    currentStage, destination, globalBudget, wishlist, currentRecommendations, wishlistTotalCost, days, newSpot, activeDropZone,
-                    goToScheduleStage, exportScheduleImage, absorbRecommendation, addSpot, togglePlanB, updateTransport, addDay, removeDay, deleteItem, handleDragStart, handleDrop, getSlotTotal, getDayTotal, getDayCost
+                    currentStage, destination, globalBudget, wishlist, currentRecommendations, wishlistTotalCost, days, newSpot, activeDropZone, draggedItem,
+                    goToScheduleStage, exportScheduleImage, absorbRecommendation, addSpot, togglePlanB, updateTransport, addDay, removeDay, deleteItem, handleDragStart, handleDrop, getSlotTotal, getDayTotal, getDayCost, handleCardSelect, handleZoneClick
                 };
             }
         }).mount('#app');
