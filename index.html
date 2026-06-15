@@ -69,6 +69,17 @@
             border-color: #e5f4d9 #fff #fff #e5f4d9;
             box-shadow: -2px -2px 5px rgba(0,0,0,0.03);
         }
+
+        /* 地图高亮标点特殊呼吸动画 */
+        .map-pulse-highlight {
+            animation: mapPulse 1.2s infinite alternate;
+            border: 2px solid #fff !important;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.7) !important;
+        }
+        @keyframes mapPulse {
+            0% { transform: scale(1); background-color: #ef4444; }
+            100% { transform: scale(1.3); background-color: #b91c1c; }
+        }
     </style>
 </head>
 <body class="h-screen w-screen relative text-slate-700 overflow-hidden bg-[#F7FDF3]">
@@ -123,10 +134,4 @@
         <div class="relative z-10 h-full w-full flex flex-col bg-[#F7FDF3]">
             <transition name="fade" mode="out-in">
                 
-                <div v-if="currentStage === 'landing'" key="landing" class="h-full w-full flex flex-col items-center justify-center relative px-6 bg-grid-green">
-                    <div class="absolute w-[500px] h-[500px] bg-[#D0EBB7]/40 blur-3xl rounded-full top-0 left-0 pointer-events-none"></div>
-                    <div class="absolute w-[450px] h-[450px] bg-pink-100/40 blur-3xl rounded-full bottom-0 right-0 pointer-events-none"></div>
-
-                    <div class="max-w-2xl text-center space-y-10 animate-fadeIn z-10">
-                        <div class="space-y-4">
-                            <div class="inline-flex items-center gap-1 px-3 py-0.5 bg
+                <div v-if="currentStage === 'landing'" key="landing" class="h-full w-full flex flex-col items
