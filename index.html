@@ -66,6 +66,11 @@
         .leaflet-container {
             font-family: 'M PLUS Rounded 1c', sans-serif !important;
         }
+
+        /* 便利贴特殊立体质感微调 */
+        .sticky-note-shadow {
+            box-shadow: 2px 8px 15px rgba(0, 0, 0, 0.05), 0px 2px 4px rgba(0, 0, 0, 0.02);
+        }
     </style>
 </head>
 <body class="h-screen w-screen relative text-slate-700 overflow-hidden bg-[#F7FDF3]">
@@ -81,7 +86,7 @@
                 <div class="max-w-2xl text-center space-y-10 animate-fadeIn z-10">
                     <div class="space-y-4">
                         <div class="inline-flex items-center gap-1 px-3 py-0.5 bg-white text-emerald-800 border border-[#D0EBB7] rounded-full text-[10px] font-bold tracking-wider shadow-sm">
-                            🍃 MINT SYSTEM V4.8
+                            🍃 MINT SYSTEM V5.0
                         </div>
                         <h1 class="text-5xl md:text-7xl font-bold text-center tracking-wide handwritten-brand py-2">
                             A TRIP TO YOUR DREAM
@@ -100,7 +105,7 @@
                                 <input type="number" v-model.number="globalBudget" class="w-full bg-slate-50 border border-slate-200 px-3 py-2 mt-1 rounded-xl text-xs font-mono font-bold text-emerald-700 focus:outline-none focus:border-[#D0EBB7]">
                             </div>
                         </div>
-                        <button @click="currentStage = 'wishlist'" class="w-full py-3 bg-[#D0EBB7] hover:bg-[#c2e2a7] text-emerald-950 rounded-xl text-xs font-bold tracking-wide shadow-sm transition-all duration-200 cursor-pointer">
+                        <button @click="currentStage = 'wishlist'" class="w-full py-3 bg-[#D0EBB7] hover:bg-[#c2e2a7] text-emerald-950 rounded-xl text-xs font-bold tracking-wide shadow-sm transition-all cursor-pointer">
                             配置心愿资产与预算 →
                         </button>
                     </div>
@@ -158,7 +163,7 @@
                         </div>
                     </div>
 
-                    <div class="flex-1 bg-white p-4 rounded-2xl border border-[#D0EBB7]/60 flex flex-col overflow-hidden shadow-xs">
+                    <div class="flex-1 bg-white p-4 rounded-2xl border border-[#D0EBB7]/60 flex flex-col overflow-hidden shadow-sm">
                         <div class="shrink-0 pb-2 border-b border-slate-100">
                             <h3 class="text-xs font-bold text-emerald-900 tracking-wider">✨ 针对 <b>{{ destination }}</b> 推荐的当地打卡资产卡片</h3>
                             <p class="text-[10px] text-slate-400 mt-0.5">点击直接吸纳到你的清单中</p>
@@ -201,11 +206,11 @@
                     </div>
                     <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                         <div class="flex items-center gap-1.5 bg-[#D0EBB7]/20 border border-[#D0EBB7] px-3 py-1 rounded-xl text-xs font-mono">
-                            <span class="font-bold text-emerald-900 uppercase text-[10px]">💰 全局预算总盘:</span>
+                            <span class="font-bold text-emerald-900 uppercase text-[10px]">💰 全局总预算:</span>
                             <input type="number" v-model.number="globalBudget" class="w-16 font-bold bg-transparent text-emerald-800 focus:outline-none text-center">元
                         </div>
                         <button @click="addDay" class="px-3 py-1.5 text-[11px] font-bold text-emerald-800 bg-white border border-[#D0EBB7] rounded-xl hover:bg-[#D0EBB7]/40 transition-colors">+ 增配出行天数</button>
-                        <button @click="exportScheduleImage" class="px-3 py-1.5 text-[11px] font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 shadow-sm">🖼️ 导出行程图片</button>
+                        <button @click="exportScheduleImage" class="px-3 py-1.5 text-[11px] font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 shadow-sm cursor-pointer">🖼️ 导出行程图片</button>
                     </div>
                 </header>
 
@@ -214,7 +219,7 @@
                     <aside class="w-full lg:w-64 bg-white border-b lg:border-b-0 lg:border-r border-[#D0EBB7]/60 flex flex-col p-4 shrink-0 max-h-[22vh] lg:max-h-none overflow-hidden"
                            @dragover.prevent @drop="handleDrop('wishlist')" @click="handleZoneClick('wishlist', null, null, $event)">
                         <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex justify-between">
-                            <span>📦 待编排资产池 (支持点击互投)</span>
+                            <span>📦 待编排资产池 (支持点击点选)</span>
                             <span class="font-mono bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded text-[9px]">{{ wishlist.length }}</span>
                         </h3>
                         <div class="flex-1 overflow-x-auto lg:overflow-y-auto no-scrollbar relative">
@@ -238,7 +243,7 @@
                         </div>
                     </aside>
 
-                    <main id="canvas-target" class="flex-1 p-4 md:p-6 overflow-x-auto flex gap-5 items-start no-scrollbar bg-grid-green">
+                    <main class="flex-1 p-4 md:p-6 overflow-x-auto flex gap-5 items-start no-scrollbar bg-grid-green">
                         <div v-for="(day, dayIndex) in days" :key="day.id" class="w-72 md:w-76 bg-white border border-[#D0EBB7]/80 rounded-2xl shadow-sm flex flex-col max-h-full shrink-0">
                             
                             <div class="p-3 border-b border-slate-100 flex items-center justify-between bg-white rounded-t-2xl">
@@ -269,10 +274,7 @@
                                         <div class="space-y-0 relative min-h-[65px]">
                                             <div v-for="(item, itemIndex) in day.slots[slot]" :key="item.id" class="relative">
                                                 
-                                                <div draggable="true" 
-                                                     @dragstart="handleDragStart(item, { type: 'day', dayId: day.id, slot: slot })"
-                                                     @click.stop="handleCardSelect(item, { type: 'day', dayId: day.id, slot: slot })"
-                                                     class="group/card bg-slate-50 border border-slate-100 p-2.5 rounded-lg hover:shadow-2xs transition-all relative z-10"
+                                                <div class="group/card bg-slate-50 border border-slate-100 p-2.5 rounded-lg hover:shadow-2xs transition-all relative z-10"
                                                      :class="{'ring-3 ring-emerald-500 scale-[1.02] bg-emerald-50/50 shadow-md': draggedItem && draggedItem.id === item.id}">
                                                     <button @click.stop="deleteItem('day', item.id, day.id, slot)" class="absolute top-1.5 right-1.5 text-slate-300 hover:text-rose-500 text-[9px]">✕</button>
                                                     <h4 class="text-xs font-bold text-slate-800 pr-3 line-clamp-1" :class="{'text-emerald-700': item.isPlanBActive}">{{ item.name }}</h4>
@@ -315,18 +317,64 @@
                         </div>
                     </main>
 
-                    <section class="w-full lg:w-80 h-64 lg:h-full bg-white border-t lg:border-t-0 lg:border-l border-[#D0EBB7]/60 p-4 flex flex-col shrink-0">
+                    <section class="w-full lg:w-80 h-72 lg:h-full bg-white border-t lg:border-t-0 lg:border-l border-[#D0EBB7]/60 p-4 flex flex-col shrink-0">
                         <div class="pb-2">
                             <h3 class="text-xs font-bold text-emerald-900 tracking-wider flex items-center gap-1">🗺️ 战术行军动态路线图</h3>
-                            <p class="text-[9px] text-slate-400 mt-0.5">卡片编排完后，系统将自动映射并闭环打卡坐标点</p>
+                            <p class="text-[9px] text-slate-400 mt-0.5">自动汇聚并闭环你在 <b class="text-emerald-700 font-bold">{{ destination }}</b> 选择的所有地点连线</p>
                         </div>
-                        <div id="map" class="flex-1 rounded-2xl border border-slate-200 shadow-inner z-0"></div>
+                        <div id="map" class="flex-1 rounded-2xl border border-slate-200 shadow-inner z-0 min-h-[180px]"></div>
                     </section>
 
                 </div>
             </div>
 
         </transition>
+
+        <div id="hidden-snapshot-board" style="position: absolute; left: -9999px; top: -9999px; width: 480px;" class="bg-[#F7FDF3] p-8 space-y-6 bg-grid-green border-4 border-[#D0EBB7] rounded-3xl">
+            <div class="text-center space-y-1">
+                <h1 class="text-4xl font-bold handwritten-brand">A TRIP TO YOUR DREAM</h1>
+                <p class="text-[11px] text-slate-500 font-bold tracking-wide">📍 特种兵出征规划总盘 · 目标城市：{{ destination }}</p>
+                <div class="w-32 h-0.5 bg-gradient-to-r from-transparent via-[#ffb7c5] to-transparent mx-auto mt-2"></div>
+            </div>
+
+            <div class="space-y-6">
+                <div v-for="day in days" :key="day.id" class="bg-[#FFFDF0] p-5 rounded-xl border border-amber-100/40 sticky-note-shadow relative transform rotate-[-0.5deg] even:rotate-[0.5deg]">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-lg drop-shadow-xs pointer-events-none">📌</div>
+                    
+                    <div class="flex justify-between items-baseline border-b border-dashed border-amber-200/60 pb-2 mb-3">
+                        <h3 class="text-base font-bold text-emerald-800 eng-sub !text-emerald-900">{{ day.name }} 行程清单</h3>
+                        <span class="text-[10px] font-mono font-bold bg-[#D0EBB7]/30 px-1.5 py-0.5 rounded text-emerald-900">预算结余: ¥{{ globalBudget - getDayCost(day) }}</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div v-for="slot in ['morning', 'afternoon', 'evening']" :key="slot">
+                            <div v-if="day.slots[slot].length > 0" class="space-y-1.5">
+                                <div class="text-[10px] font-bold text-slate-400">
+                                    <span v-if="slot === 'morning'">🌅 上午时段</span>
+                                    <span v-if="slot === 'afternoon'">☀️ 下午时段</span>
+                                    <span v-if="slot === 'evening'">🌙 晚上打卡</span>
+                                </div>
+                                <div class="pl-2 border-l-2 border-[#D0EBB7] space-y-1">
+                                    <div v-for="item in day.slots[slot]" :key="item.id" class="text-xs flex justify-between items-center text-slate-700">
+                                        <span class="font-medium">⚡ {{ item.name }}</span>
+                                        <span class="font-mono text-[10px] text-slate-400">({{ item.duration }}h / ¥{{ item.cost }})</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="getDayTotal(day) === 0" class="text-xs text-slate-300 italic text-center py-4">今天是个空白格，未排定任何战术指标。</div>
+                    </div>
+
+                    <div class="mt-4 pt-2 border-t border-amber-100 flex justify-between text-[10px] font-mono text-slate-400">
+                        <span>⌛ 动态饱和度: {{ getDayTotal(day) }}h / 12h</span>
+                        <span>💰 今日已耗: ¥{{ getDayCost(day) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center pt-2 text-[9px] font-mono text-emerald-800/40 tracking-wider">GENERATED BY MINT SYSTEM APP · © 2026</div>
+        </div>
+
     </div>
 
     <script>
@@ -386,27 +434,34 @@
 
                 const newSpot = ref({ name: '', duration: 1, cost: 0, showPlanB: false, bName: '', bDuration: 1, bCost: 0 });
                 
-                // 全局选中共享槽（拖拽、点击共用此核心指针）
                 const draggedItem = ref(null);
                 const dragSource = ref(null);
                 const activeDropZone = ref(null);
 
+                // 核心控制流切换：增加手机地图适配延迟及 invalidateSize 强制修正
                 const goToScheduleStage = () => {
                     currentStage.value = 'schedule';
                     nextTick(() => {
-                        initMap();
-                        renderMapRoutes();
+                        setTimeout(() => {
+                            initMap();
+                            renderMapRoutes();
+                        }, 350); // 给手机端 DOM 弹性变形留足时间
                     });
                 };
 
                 const initMap = () => {
-                    if (mapInstance) return;
-                    const center = cityCenterCoords[destination.value.trim()] || [39.9042, 116.4074];
-                    mapInstance = L.map('map', { zoomControl: false }).setView(center, 12);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap'
-                    }).addTo(mapInstance);
-                    markerGroup = L.layerGroup().addTo(mapInstance);
+                    const mapDom = document.getElementById('map');
+                    if (!mapDom) return;
+                    
+                    if (!mapInstance) {
+                        const center = cityCenterCoords[destination.value.trim()] || [39.9042, 116.4074];
+                        mapInstance = L.map('map', { zoomControl: false, dragging: true, touchZoom: true }).setView(center, 12);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
+                        markerGroup = L.layerGroup().addTo(mapInstance);
+                    }
+                    
+                    // 核心物理修复：解决手机端因显隐状态导致点不动、大小塌陷的 Bug
+                    mapInstance.invalidateSize();
                 };
 
                 const renderMapRoutes = () => {
@@ -416,39 +471,59 @@
                     const center = cityCenterCoords[destination.value.trim()] || [39.9042, 116.4074];
                     const latlngs = [];
 
+                    // 1. 强制在地图中心绘制“城市大本营”标记
+                    L.marker(center, {
+                        icon: L.divIcon({
+                            html: '<div class="bg-emerald-600 text-white font-bold text-[10px] p-1.5 rounded-full border-2 border-white shadow-md whitespace-nowrap">📍 '+destination.value+'</div>',
+                            className: 'custom-div-icon',
+                            iconSize: [40, 40]
+                        })
+                    }).addTo(markerGroup);
+
+                    // 2. 循迹抓取当前卡片地点，并直接呈现在地图上
                     ['morning', 'afternoon', 'evening'].forEach(slot => {
                         days.value.forEach(day => {
-                            day.slots[slot].forEach(item => {
-                                const lat = center[0] + (item.latOffset || 0);
-                                const lng = center[1] + (item.lngOffset || 0);
-                                latlngs.push([lat, lng]);
-                                L.marker([lat, lng]).addTo(markerGroup)
-                                 .bindPopup(`<b>${item.name}</b>`)
-                                 .openPopup();
-                            });
+                            if (day.slots && day.slots[slot]) {
+                                day.slots[slot].forEach(item => {
+                                    const lat = center[0] + (item.latOffset || 0);
+                                    const lng = center[1] + (item.lngOffset || 0);
+                                    latlngs.push([lat, lng]);
+                                    
+                                    L.marker([lat, lng]).addTo(markerGroup)
+                                     .bindPopup(`<div class="p-1 font-sans text-xs"><b>✨ ${item.name}</b><br>预计停留: ${item.duration}h</div>`)
+                                     .openPopup();
+                                });
+                            }
                         });
                     });
 
                     if (latlngs.length > 0) {
-                        L.polyline(latlngs, { color: '#5a7a42', weight: 4, dashArray: '5, 10' }).addTo(markerGroup);
-                        mapInstance.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
+                        L.polyline(latlngs, { color: '#10b981', weight: 4, dashArray: '5, 8' }).addTo(markerGroup);
+                        mapInstance.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40] });
                     } else {
                         mapInstance.setView(center, 12);
                     }
+                    mapInstance.invalidateSize();
                 };
 
+                // 核心重构：完美绕过手机横向切割限制的“幕后便利贴”导出引擎
                 const exportScheduleImage = () => {
-                    const element = document.getElementById('canvas-target');
-                    if (!element) return;
-                    html2canvas(element, {
+                    const hiddenTarget = document.getElementById('hidden-snapshot-board');
+                    if (!hiddenTarget) return;
+
+                    // 强制在多触屏端开启跨域、高增益清晰度模式
+                    html2canvas(hiddenTarget, {
                         useCORS: true,
-                        backgroundColor: '#F7FDF3',
-                        scale: 2 
+                        allowTaint: true,
+                        scale: 2,
+                        logging: false
                     }).then(canvas => {
                         const link = document.createElement('a');
-                        link.download = `特种兵旅游-${destination.value}-深度精算日程表.png`;
-                        link.href = canvas.toDataURL();
+                        link.download = `A_Trip_To_Your_Dream-${destination.value}-便利贴手账日程表.png`;
+                        link.href = canvas.toDataURL('image/png');
                         link.click();
+                    }).catch(err => {
+                        alert('导出失败，请重试');
                     });
                 };
 
@@ -457,7 +532,8 @@
                         id: Date.now() + Math.random(),
                         name: rec.name, duration: rec.duration, cost: rec.cost,
                         isPlanBActive: false, planB: rec.planB ? { ...rec.planB } : null,
-                        latOffset: rec.latOffset, lngOffset: rec.lngOffset,
+                        latOffset: rec.latOffset || (Math.random() - 0.5) * 0.04, 
+                        lngOffset: rec.lngOffset || (Math.random() - 0.5) * 0.04,
                         transport: { type: 'subway', duration: 0.5, cost: 5 }
                     });
                 };
@@ -470,7 +546,7 @@
                     }
                     wishlist.value.push({
                         id: Date.now(), name: newSpot.value.name, duration: Number(newSpot.value.duration) || 1, cost: Number(newSpot.value.cost) || 0,
-                        isPlanBActive: false, planB: planBData, latOffset: (Math.random() - 0.5) * 0.05, lngOffset: (Math.random() - 0.5) * 0.05,
+                        isPlanBActive: false, planB: planBData, latOffset: (Math.random() - 0.5) * 0.04, lngOffset: (Math.random() - 0.5) * 0.04,
                         transport: { type: 'subway', duration: 0.5, cost: 5 }
                     });
                     newSpot.value.name = ''; newSpot.value.duration = 1; newSpot.value.cost = 0;
@@ -516,41 +592,22 @@
                     renderMapRoutes();
                 };
 
-                // 【新增：手机端点选兼容逻辑】轻触/点击卡片触发选择
                 const handleCardSelect = (item, source) => {
-                    if (draggedItem.value && draggedItem.value.id === item.id) {
-                        // 如果点的是同一个，取消选中状态
-                        draggedItem.value = null;
-                        dragSource.value = null;
-                    } else {
-                        // 激活选择
-                        draggedItem.value = item;
-                        dragSource.value = source;
-                    }
+                    if (draggedItem.value && draggedItem.value.id === item.id) { draggedItem.value = null; dragSource.value = null; } 
+                    else { draggedItem.value = item; dragSource.value = source; }
                 };
 
-                // 【新增：手机端点击投放槽逻辑】
                 const handleZoneClick = (targetType, dayId = null, slot = null, event) => {
-                    // 如果点的是卡片里的各种按钮（如删除、PlanB切换），直接跳过防误触
-                    if (event && event.target.closest('button') || event && event.target.closest('select')) return;
-                    
+                    if (event && (event.target.closest('button') || event.target.closest('select'))) return;
                     if (draggedItem.value) {
-                        // 如果互投的是相同地方，则自动转为解除选中状态
-                        if (dragSource.value.type === targetType && 
-                            (targetType === 'wishlist' || (dragSource.value.dayId === dayId && dragSource.value.slot === slot))) {
-                            draggedItem.value = null;
-                            dragSource.value = null;
-                            return;
+                        if (dragSource.value.type === targetType && (targetType === 'wishlist' || (dragSource.value.dayId === dayId && dragSource.value.slot === slot))) {
+                            draggedItem.value = null; dragSource.value = null; return;
                         }
                         handleDrop(targetType, dayId, slot);
                     }
                 };
 
-                // 统一标准底层拖动核心派发器
-                const handleDragStart = (item, source) => {
-                    draggedItem.value = item;
-                    dragSource.value = source;
-                };
+                const handleDragStart = (item, source) => { draggedItem.value = item; dragSource.value = source; };
 
                 const handleDrop = (targetType, dayId = null, slot = null) => {
                     if (!draggedItem.value) return;
@@ -569,11 +626,7 @@
                         if (targetType === 'wishlist') { wishlist.value.push(draggedItem.value); }
                         else if (targetType === 'day') { const tgtDay = days.value.find(d => d.id === dayId); if (tgtDay) tgtDay.slots[slot].push(draggedItem.value); }
                     }
-                    
-                    // 统一清空状态机变量
-                    draggedItem.value = null; 
-                    dragSource.value = null; 
-                    activeDropZone.value = null;
+                    draggedItem.value = null; dragSource.value = null; activeDropZone.value = null;
                     renderMapRoutes();
                 };
 
